@@ -30,7 +30,7 @@ public interface BehaviorProvider {
      * client using {@link #save} and {@link #load}.
      *
      * @param player the player the behaviors should be created for.
-     * @return list of new behaviors, may be <tt>null</tt>.
+     * @return list of new behaviors, may be <code>null</code>.
      */
     Iterable<Behavior> createBehaviors(Player player);
 
@@ -53,7 +53,7 @@ public interface BehaviorProvider {
      * <br>
      * You are <em>not</em> guaranteed that his nbt belongs to a behavior
      * created by this provider! If the NBT cannot be handled, return
-     * <tt>null</tt>.
+     * <code>null</code>.
      * <br>
      * This is called both on the server and the client; on the server it
      * is called when restoring a saved player, on the client when
@@ -61,7 +61,7 @@ public interface BehaviorProvider {
      *
      * @param player the player the behaviors should be created for.
      * @param nbt    the tag to restore the behavior from.
-     * @return the restored behavior, or <tt>null</tt> if unhandled.
+     * @return the restored behavior, or <code>null</code> if unhandled.
      */
     Behavior load(Player player, CompoundTag nbt);
 }

@@ -14,8 +14,8 @@ public interface FilteredEnvironment {
     /**
      * Whether the callback with the specified name on this environment is enabled.
      * <br>
-     * Returning <tt>true</tt> will be the same as if this interface were not
-     * implemented. Returning <tt>false</tt> will hide the callback with the
+     * Returning <code>true</code> will be the same as if this interface were not
+     * implemented. Returning <code>false</code> will hide the callback with the
      * specified name from machines connected to it.
      *
      * @param name the name of the callback to check for.

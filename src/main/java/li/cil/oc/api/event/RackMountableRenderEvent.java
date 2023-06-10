@@ -30,7 +30,7 @@ public abstract class RackMountableRenderEvent extends Event {
     public final int mountable;
 
     /**
-     * Some additional data made available by the mountable. May be <tt>null</tt>.
+     * Some additional data made available by the mountable. May be <code>null</code>.
      *
      * @see RackMountable#getData()
      */
@@ -45,9 +45,9 @@ public abstract class RackMountableRenderEvent extends Event {
     /**
      * Fired when the static rack model is rendered.
      * <br>
-     * Code here runs inside a <tt>ISimpleBlockRenderingHandler</tt>, so functionality
+     * Code here runs inside a <code>ISimpleBlockRenderingHandler</code>, so functionality
      * is limited to what's possible in there. This is primarily meant to allow setting
-     * a custom override texture (<tt>renderer.setOverrideBlockTexture</tt>) for the
+     * a custom override texture (<code>renderer.setOverrideBlockTexture</code>) for the
      * mountables front.
      * <br>
      * The bounds will be set up before this call, so you may adjust those, if you wish.
@@ -70,7 +70,7 @@ public abstract class RackMountableRenderEvent extends Event {
         }
 
         /**
-         * The texture currently set to use for the front of the mountable, or <tt>null</tt>.
+         * The texture currently set to use for the front of the mountable, or <code>null</code>.
          */
         public TextureAtlasSprite getFrontTextureOverride() {
             return frontTextureOverride;
@@ -89,7 +89,7 @@ public abstract class RackMountableRenderEvent extends Event {
     /**
      * Fired when the dynamic rack model is rendered.
      * <br>
-     * Code here runs inside a <tt>TileEntityRenderer</tt>, so go nuts. This is
+     * Code here runs inside a <code>TileEntityRenderer</code>, so go nuts. This is
      * primarily meant to allow rendering custom overlays, such as LEDs. The GL state
      * will have been adjusted such that rendering a one by one quad starting at the
      * origin will fill the full front face of the rack (i.e. rotation and translation
@@ -114,7 +114,7 @@ public abstract class RackMountableRenderEvent extends Event {
         /**
          * The vertical low and high texture coordinates for the mountable's slot.
          * <br>
-         * This is purely for convenience; they're computed as <tt>(2/16)+i*(3/16)</tt>.
+         * This is purely for convenience; they're computed as <code>(2/16)+i*(3/16)</code>.
          */
         public final float v0, v1;
 

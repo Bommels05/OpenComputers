@@ -28,19 +28,19 @@ public interface UpgradeRenderer {
      * This method is used to determine which upgrade is rendered where, and is
      * called for every installed, renderable upgrade. The available mount
      * point names are defined in {@link MountPointName}, with the two special
-     * values <tt>None</tt> and <tt>Any</tt>.
+     * values <code>None</code> and <code>Any</code>.
      * <br>
-     * <tt>None</tt> means that the upgrade should not be rendered at all. This
+     * <code>None</code> means that the upgrade should not be rendered at all. This
      * can be the case when there is no slot remaining that the upgrade may be
-     * rendered in. Returning <tt>null</tt> is equivalent to returning <tt>None</tt>.
+     * rendered in. Returning <code>null</code> is equivalent to returning <code>None</code>.
      * <br>
-     * <tt>Any</tt> means that the upgrade doesn't really care where it's being
+     * <code>Any</code> means that the upgrade doesn't really care where it's being
      * rendered. Mount points not assigned by another upgrade preferring to be
      * rendered in it will be assigned to such upgrades in the order they are
      * installed in the robot.
      * <br>
      * Returning a mount point not in the list of available mount points will
-     * be equivalent to returning <tt>None</tt>.
+     * be equivalent to returning <code>None</code>.
      *
      * @param stack                the item stack of the upgrade to render.
      * @param robot                the robot the upgrade is rendered on.

@@ -22,7 +22,7 @@ import net.minecraft.world.Container;
  * <br>
  * Note: mountables may implement the {@link ComponentHost} interface and
  * {@link Container}. In this case, if they contain a redstone card and have
- * a state of <tt>State.IsWorking</tt> the rack will visually connect to
+ * a state of <code>State.IsWorking</code> the rack will visually connect to
  * redstone, for example. Same goes for abstract bus cards, and potentially
  * more things in the future.
  * <br>

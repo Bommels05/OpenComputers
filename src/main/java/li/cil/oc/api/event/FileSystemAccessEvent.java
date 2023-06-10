@@ -110,7 +110,7 @@ public class FileSystemAccessEvent extends Event {
     /**
      * The tile entity hosting the file system.
      * <br>
-     * <em>Important</em>: this can be <tt>null</tt>, which is usually the
+     * <em>Important</em>: this can be <code>null</code>, which is usually the
      * case when the container is an entity or item.
      */
     public BlockEntity getBlockEntity() {
@@ -151,7 +151,7 @@ public class FileSystemAccessEvent extends Event {
          * Constructor for tile entity hosted file systems.
          *
          * @param sound      the name of the sound effect to play.
-         * @param tileEntity the tile entity hosting the file system.
+         * @param blockEntity the tile entity hosting the file system.
          * @param data       the additional data.
          */
         public Client(String sound, BlockEntity blockEntity, CompoundTag data) {
