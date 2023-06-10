@@ -1,5 +1,5 @@
 package li.cil.oc.integration.projectred
-
+/*
 import mrtjp.projectred.api.IScrewdriver
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
@@ -22,3 +22,4 @@ object EventHandlerProjectRed {
 
   def isWrench(stack: ItemStack): Boolean = stack.getItem.isInstanceOf[IScrewdriver]
 }
+ */

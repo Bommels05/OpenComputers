@@ -4,14 +4,14 @@ import li.cil.oc.api.Driver
 import li.cil.oc.common.Slot
 import li.cil.oc.common.container.ContainerTypes
 import li.cil.oc.common.container.{DiskDrive => DiskDriveContainer}
-import li.cil.oc.common.tileentity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.container.INamedContainerProvider
-import net.minecraft.item.ItemStack
-import net.minecraft.util.text.StringTextComponent
+import li.cil.oc.common.blockentity
+import net.minecraft.network.chat.TextComponent
+import net.minecraft.world.MenuProvider
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.entity.player
+import net.minecraft.world.entity.player.Player
 
-trait DiskDriveMountableInventory extends ItemStackInventory with INamedContainerProvider {
+trait DiskDriveMountableInventory extends ItemStackInventory with MenuProvider {
   def tier: Int = 1
 
   override def getContainerSize = 1
@@ -20,13 +20,13 @@ trait DiskDriveMountableInventory extends ItemStackInventory with INamedContaine
 
   override def getMaxStackSize = 1
 
-  override def canPlaceItem(slot: Int, stack: ItemStack): Boolean = (slot, Option(Driver.driverFor(stack, classOf[tileentity.DiskDrive]))) match {
+  override def canPlaceItem(slot: Int, stack: ItemStack): Boolean = (slot, Option(Driver.driverFor(stack, classOf[blockentity.DiskDrive]))) match {
     case (0, Some(driver)) => driver.slot(stack) == Slot.Floppy
     case _ => false
   }
 
-  override def getDisplayName = StringTextComponent.EMPTY
+  override def getDisplayName = TextComponent.EMPTY
 
-  override def createMenu(id: Int, playerInventory: PlayerInventory, player: PlayerEntity) =
+  override def createMenu(id: Int, playerInventory: player.Inventory, p: Player) =
     new DiskDriveContainer(ContainerTypes.DISK_DRIVE, id, playerInventory, this)
 }

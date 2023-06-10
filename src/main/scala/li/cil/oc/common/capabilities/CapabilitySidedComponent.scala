@@ -4,9 +4,9 @@ import li.cil.oc.api.network.Environment
 import li.cil.oc.api.network.SidedComponent
 import li.cil.oc.api.network.SidedEnvironment
 import li.cil.oc.integration.Mods
-import net.minecraft.tileentity.TileEntity
-import net.minecraft.util.Direction
-import net.minecraft.util.ResourceLocation
+import net.minecraft.core.Direction
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraftforge.common.capabilities.Capability
 import net.minecraftforge.common.capabilities.ICapabilityProvider
 import net.minecraftforge.common.util.LazyOptional
@@ -15,7 +15,7 @@ import net.minecraftforge.common.util.NonNullSupplier
 object CapabilitySidedComponent {
   final val SidedComponent = new ResourceLocation(Mods.IDs.OpenComputers, "sided_component")
 
-  class Provider(val tileEntity: TileEntity with Environment with SidedComponent) extends ICapabilityProvider with NonNullSupplier[Provider] with SidedEnvironment {
+  class Provider(val blockEntity: BlockEntity with Environment with SidedComponent) extends ICapabilityProvider with NonNullSupplier[Provider] with SidedEnvironment {
     private val wrapper = LazyOptional.of(this)
 
     def get = this
@@ -27,9 +27,9 @@ object CapabilitySidedComponent {
       else LazyOptional.empty[T]
     }
 
-    override def sidedNode(side: Direction) = if (tileEntity.canConnectNode(side)) tileEntity.node else null
+    override def sidedNode(side: Direction) = if (blockEntity.canConnectNode(side)) blockEntity.node else null
 
-    override def canConnect(side: Direction) = tileEntity.canConnectNode(side)
+    override def canConnect(side: Direction) = blockEntity.canConnectNode(side)
   }
 
 }

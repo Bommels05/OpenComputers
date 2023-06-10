@@ -9,10 +9,11 @@ import li.cil.oc.server.component.result
 import li.cil.oc.util.{BlockInventorySource, BlockPosition, DatabaseAccess, EntityInventorySource, InventorySource, InventoryUtils, StackOption}
 import li.cil.oc.util.ExtendedWorld._
 import li.cil.oc.util.ExtendedArguments._
-import net.minecraft.block.Block
-import net.minecraft.item.ItemStack
-import net.minecraft.util.Direction
+import net.minecraft.core.Direction
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.block.Block
 import net.minecraftforge.items.IItemHandler
+import net.minecraftforge.registries.ForgeRegistries
 
 import scala.collection.convert.ImplicitConversionsToScala._
 
@@ -67,8 +68,15 @@ trait WorldInventoryAnalytics extends WorldAware with SideRestricted with Networ
       val stackA = inventory.getStackInSlot(args.checkSlot(inventory, 1))
       val stackB = inventory.getStackInSlot(args.checkSlot(inventory, 2))
       result(stackA == stackB ||
-        (!stackA.isEmpty && !stackB.isEmpty &&
-          stackA.getItem.getTags.intersect(stackB.getItem.getTags).nonEmpty))
+        (!stackA.isEmpty && !stackB.isEmpty && {
+          val tagsA = ForgeRegistries.ITEMS.tags().getReverseTag(stackA.getItem)
+          val tagsB = ForgeRegistries.ITEMS.tags().getReverseTag(stackB.getItem)
+          if (tagsA.isPresent && tagsB.isPresent) {
+            tagsA.get().getTagKeys.toList.equals(tagsB.get().getTagKeys.toList)
+          } else {
+            tagsA == tagsB
+          }
+        }))
     })
   }
 

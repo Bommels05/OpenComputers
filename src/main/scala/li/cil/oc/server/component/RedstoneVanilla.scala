@@ -1,7 +1,6 @@
 package li.cil.oc.server.component
 
 import java.util
-
 import li.cil.oc.Constants
 import li.cil.oc.api.driver.DeviceInfo.DeviceAttribute
 import li.cil.oc.api.driver.DeviceInfo.DeviceClass
@@ -12,12 +11,12 @@ import li.cil.oc.api.machine.Arguments
 import li.cil.oc.api.machine.Callback
 import li.cil.oc.api.machine.Context
 import li.cil.oc.api.network._
-import li.cil.oc.common.tileentity.traits.{RedstoneAware, RedstoneChangedEventArgs}
+import li.cil.oc.common.blockentity.traits.{RedstoneAware, RedstoneChangedEventArgs}
 import li.cil.oc.util.BlockPosition
 import li.cil.oc.util.ExtendedBlock._
 import li.cil.oc.util.ExtendedWorld._
 import li.cil.oc.util.RotationHelper
-import net.minecraft.util.Direction
+import net.minecraft.core.Direction
 
 import scala.collection.convert.ImplicitConversionsToJava._
 

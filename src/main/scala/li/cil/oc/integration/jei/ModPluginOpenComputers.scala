@@ -21,11 +21,9 @@ import mezz.jei.api.registration.IRecipeRegistration
 import mezz.jei.api.registration.ISubtypeRegistration
 import mezz.jei.api.runtime.IIngredientManager
 import mezz.jei.api.runtime.IJeiRuntime
-import net.minecraft.client.gui.screen.inventory.ContainerScreen
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.CompoundNBT
-import net.minecraft.util.ResourceLocation
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.item.ItemStack
 
 import scala.collection.JavaConverters._
 
@@ -53,7 +51,7 @@ class ModPluginOpenComputers extends IModPlugin {
     CallbackDocHandler.CallbackDocRecipeCategory.initialize(registration.getJeiHelpers.getGuiHelper)
   }
 
-  private var stackUnderMouse: (ContainerScreen[_], Int, Int) => StackOption = _
+  private var stackUnderMouse: (AbstractContainerScreen[_], Int, Int) => StackOption = _
 
   override def onRuntimeAvailable(jeiRuntime: IJeiRuntime) {
     if (stackUnderMouse == null) {

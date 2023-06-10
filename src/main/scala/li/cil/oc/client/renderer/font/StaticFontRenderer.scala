@@ -1,16 +1,15 @@
 package li.cil.oc.client.renderer.font
 
 import com.google.common.base.Charsets
-import com.mojang.blaze3d.vertex.IVertexBuilder
+import com.mojang.blaze3d.vertex.VertexConsumer
+import com.mojang.math.{Matrix4f, Vector4f}
 import li.cil.oc.OpenComputers
 import li.cil.oc.Settings
 import li.cil.oc.client.Textures
 import li.cil.oc.client.renderer.RenderTypes
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.RenderType
-import net.minecraft.util.ResourceLocation
-import net.minecraft.util.math.vector.Matrix4f
-import net.minecraft.util.math.vector.Vector4f
+import net.minecraft.resources.ResourceLocation
 import org.lwjgl.opengl.GL11
 
 import scala.io.Source
@@ -97,7 +96,7 @@ class StaticFontRenderer extends TextureFontRenderer {
     GL11.glVertex3f(vec.x, vec.y, vec.z)
   }
 
-  protected def drawChar(builder: IVertexBuilder, matrix: Matrix4f, color: Int, tx: Float, ty: Float, char: Int) {
+  protected def drawChar(builder: VertexConsumer, matrix: Matrix4f, color: Int, tx: Float, ty: Float, char: Int) {
     val index = 1 + (chars.indexOf(char) match {
       case -1 => chars.indexOf('?')
       case i => i

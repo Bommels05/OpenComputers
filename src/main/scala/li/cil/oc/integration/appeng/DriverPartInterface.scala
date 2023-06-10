@@ -1,5 +1,5 @@
 package li.cil.oc.integration.appeng
-
+/*
 import appeng.api.implementations.tiles.ISegmentedInventory
 import appeng.api.networking.IGridHost
 import appeng.api.networking.security.IActionHost
@@ -63,3 +63,4 @@ object DriverPartInterface extends driver.DriverBlock {
   }
 
 }
+ */

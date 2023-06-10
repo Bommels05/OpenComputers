@@ -5,21 +5,21 @@ import li.cil.oc.api
 import li.cil.oc.api.detail.ItemInfo
 import li.cil.oc.common.Slot
 import li.cil.oc.common.Tier
-import li.cil.oc.common.tileentity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.inventory.IInventory
-import net.minecraft.inventory.container.ContainerType
-import net.minecraft.nbt.CompoundNBT
+import li.cil.oc.common.blockentity
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.world.Container
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.inventory.MenuType
+import net.minecraft.world.item.ItemStack
 
-class Relay(selfType: ContainerType[_ <: Relay], id: Int, playerInventory: PlayerInventory, relay: IInventory)
+class Relay(selfType: MenuType[_ <: Relay], id: Int, playerInventory: Inventory, relay: Container)
   extends Player(selfType, id, playerInventory, relay) {
 
   lazy final val WirelessNetworkCardTier1: ItemInfo = api.Items.get(Constants.ItemName.WirelessNetworkCardTier1)
   lazy final val WirelessNetworkCardTier2: ItemInfo = api.Items.get(Constants.ItemName.WirelessNetworkCardTier2)
   lazy final val LinkedCard: ItemInfo = api.Items.get(Constants.ItemName.LinkedCard)
 
-  override protected def getHostClass = classOf[tileentity.Relay]
+  override protected def getHostClass = classOf[blockentity.Relay]
 
   addSlotToContainer(151, 15, Slot.CPU)
   addSlotToContainer(151, 34, Slot.Memory)
@@ -43,9 +43,9 @@ class Relay(selfType: ContainerType[_ <: Relay], id: Int, playerInventory: Playe
 
   def queueSize = synchronizedData.getInt("queueSize")
 
-  override protected def detectCustomDataChanges(nbt: CompoundNBT): Unit = {
+  override protected def detectCustomDataChanges(nbt: CompoundTag): Unit = {
     relay match {
-      case te: tileentity.Relay => {
+      case te: blockentity.Relay => {
         synchronizedData.putInt("relayDelay", te.relayDelay)
         synchronizedData.putInt("relayAmount", te.relayAmount)
         synchronizedData.putInt("maxQueueSize", te.maxQueueSize)

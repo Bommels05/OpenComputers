@@ -1,21 +1,20 @@
 package li.cil.oc.server.agent
 
-import net.minecraft.network.play.client.CPlayerDiggingPacket
-import net.minecraft.util.Direction
-import net.minecraft.util.math.BlockPos
 import li.cil.oc.OpenComputers
 import li.cil.oc.api.network.Node
-import net.minecraft.server.management.PlayerInteractionManager
+import net.minecraft.core.{BlockPos, Direction}
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.server.level.ServerPlayerGameMode
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.event.entity.player.PlayerEvent
 import net.minecraftforge.event.world.BlockEvent
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper
 import net.minecraftforge.eventbus.api.{EventPriority, SubscribeEvent}
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper
 
 import scala.collection.convert.ImplicitConversionsToScala._
 
 object PlayerInteractionManagerHelper {
-  private val isDestroyingBlock = ObfuscationReflectionHelper.findField(classOf[PlayerInteractionManager], "field_73088_d")
+  private val isDestroyingBlock = ObfuscationReflectionHelper.findField(classOf[ServerPlayerGameMode], "field_73088_d")
 
   private def isDestroyingBlock(player: Player): Boolean = {
     try {
@@ -27,9 +26,9 @@ object PlayerInteractionManagerHelper {
 
   def onBlockClicked(player: Player, pos: BlockPos, side: Direction): Boolean = {
     if (isDestroyingBlock(player)) {
-      player.gameMode.handleBlockBreakAction(pos, CPlayerDiggingPacket.Action.ABORT_DESTROY_BLOCK, side, 0)
+      player.gameMode.handleBlockBreakAction(pos, ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, side, 0)
     }
-    player.gameMode.handleBlockBreakAction(pos, CPlayerDiggingPacket.Action.START_DESTROY_BLOCK, side, 0)
+    player.gameMode.handleBlockBreakAction(pos, ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, side, 0)
     isDestroyingBlock(player)
   }
 
@@ -80,12 +79,12 @@ object PlayerInteractionManagerHelper {
 
     MinecraftForge.EVENT_BUS.register(infBreaker)
     try {
-      player.gameMode.handleBlockBreakAction(pos, CPlayerDiggingPacket.Action.STOP_DESTROY_BLOCK, null, 0)
+      player.gameMode.handleBlockBreakAction(pos, ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, null, 0)
       infBreaker.expToDrop
     } catch {
       case e: Exception => {
         OpenComputers.log.info(s"an exception was thrown while trying to call blockRemoving: ${e.getMessage}")
-        player.gameMode.handleBlockBreakAction(pos, CPlayerDiggingPacket.Action.ABORT_DESTROY_BLOCK, null, 0)
+        player.gameMode.handleBlockBreakAction(pos, ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, null, 0)
         -1
       }
     } finally {

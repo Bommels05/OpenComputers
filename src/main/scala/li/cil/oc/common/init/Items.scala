@@ -1,7 +1,6 @@
 package li.cil.oc.common.init
 
 import java.util.concurrent.Callable
-
 import li.cil.oc.Constants
 import li.cil.oc.CreativeTab
 import li.cil.oc.OpenComputers
@@ -21,17 +20,11 @@ import li.cil.oc.common.item.data.RobotData
 import li.cil.oc.common.item.data.TabletData
 import li.cil.oc.common.item.traits.SimpleItem
 import li.cil.oc.server.machine.luac.LuaStateFactory
-import net.minecraft.block.Block
-import net.minecraft.item.BlockItem
-import net.minecraft.item.DyeColor
-import net.minecraft.item.Item
-import net.minecraft.item.Item.Properties
-import net.minecraft.item.ItemGroup
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Rarity
-import net.minecraft.util.NonNullList
-import net.minecraft.util.ResourceLocation
-import net.minecraftforge.common.ToolType
+import net.minecraft.core.NonNullList
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.item.{BlockItem, DyeColor, Item, ItemStack, Rarity}
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties
 import net.minecraftforge.registries.GameData
 
 import scala.collection.mutable
@@ -80,7 +73,7 @@ object Items extends ItemAPI {
     instance
   }
 
-  def registerBlock(instance: Block, id: String, itemProps: Properties): Block = {
+  def registerBlock(instance: Block, id: String, itemProps: Item.Properties): Block = {
     if (!descriptors.contains(id)) {
       val itemInst = instance match {
         case simple: SimpleBlock =>
@@ -330,7 +323,7 @@ object Items extends ItemAPI {
 
   // ----------------------------------------------------------------------- //
 
-  private def defaultProps = new Properties().tab(CreativeTab)
+  private def defaultProps = new Item.Properties().tab(CreativeTab)
 
   def init() {
     initMaterials()
@@ -384,8 +377,6 @@ object Items extends ItemAPI {
     registerItem(new item.DiamondChip(defaultProps), Constants.ItemName.DiamondChip)
   }
 
-  val WrenchType: ToolType = ToolType.get("wrench")
-
   // All kinds of tools.
   private def initTools(): Unit = {
     registerItem(new item.Analyzer(defaultProps), Constants.ItemName.Analyzer)
@@ -393,7 +384,7 @@ object Items extends ItemAPI {
     registerItem(new item.Terminal(defaultProps.stacksTo(1)), Constants.ItemName.Terminal)
     registerItem(new item.TexturePicker(defaultProps), Constants.ItemName.TexturePicker)
     registerItem(new item.Manual(defaultProps), Constants.ItemName.Manual)
-    registerItem(new item.Wrench(defaultProps.stacksTo(1).addToolType(WrenchType, 1)), Constants.ItemName.Wrench)
+    registerItem(new item.Wrench(defaultProps.stacksTo(1)), Constants.ItemName.Wrench)
 
     // 1.5.11
     registerItem(new item.HoverBoots(defaultProps.stacksTo(1).rarity(Rarity.UNCOMMON).setNoRepair), Constants.ItemName.HoverBoots)

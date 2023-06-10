@@ -1,13 +1,12 @@
 package li.cil.oc.integration.opencomputers
 
 import java.util
-
 import li.cil.oc.Constants
 import li.cil.oc.api
 import li.cil.oc.api.detail.ItemInfo
 import li.cil.oc.api.driver.Converter
 import li.cil.oc.server.component
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 import scala.collection.convert.ImplicitConversionsToScala._
 

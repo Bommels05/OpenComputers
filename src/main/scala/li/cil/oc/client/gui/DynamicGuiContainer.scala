@@ -1,7 +1,7 @@
 package li.cil.oc.client.gui
 
-import com.mojang.blaze3d.matrix.MatrixStack
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.{DefaultVertexFormat, PoseStack, Tesselator, VertexFormat}
 import li.cil.oc.Localization
 import li.cil.oc.client.Textures
 import li.cil.oc.common
@@ -13,19 +13,18 @@ import li.cil.oc.integration.util.ItemSearch
 import li.cil.oc.util.RenderState
 import li.cil.oc.util.StackOption
 import li.cil.oc.util.StackOption._
-import net.minecraft.client.gui.AbstractGui
-import net.minecraft.client.renderer.Tessellator
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.container.Container
-import net.minecraft.inventory.container.Slot
-import net.minecraft.util.text.ITextComponent
+import net.minecraft.client.gui.GuiComponent
+import net.minecraft.client.renderer.{GameRenderer, ShaderInstance}
+import net.minecraft.network.chat.Component
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.inventory.{AbstractContainerMenu, Slot}
 import org.lwjgl.opengl.GL11
 
+import java.util.function.Supplier
 import scala.collection.convert.ImplicitConversionsToJava._
 import scala.collection.convert.ImplicitConversionsToScala._
 
-abstract class DynamicGuiContainer[C <: Container](container: C, inv: PlayerInventory, title: ITextComponent)
+abstract class DynamicGuiContainer[C <: AbstractContainerMenu](container: C, inv: Inventory, title: Component)
   extends CustomGuiContainer(container, inv, title) {
 
   protected var hoveredStackNEI: StackOption = EmptyStack
@@ -36,9 +35,9 @@ abstract class DynamicGuiContainer[C <: Container](container: C, inv: PlayerInve
     inventoryLabelY = imageHeight - 96 + 2
   }
 
-  protected def drawSecondaryForegroundLayer(stack: MatrixStack, mouseX: Int, mouseY: Int) {}
+  protected def drawSecondaryForegroundLayer(stack: PoseStack, mouseX: Int, mouseY: Int) {}
 
-  override protected def renderLabels(stack: MatrixStack, mouseX: Int, mouseY: Int) {
+  override protected def renderLabels(stack: PoseStack, mouseX: Int, mouseY: Int) {
     super.renderLabels(stack, mouseX, mouseY)
     RenderState.pushAttrib()
 
@@ -51,21 +50,21 @@ abstract class DynamicGuiContainer[C <: Container](container: C, inv: PlayerInve
     RenderState.popAttrib()
   }
 
-  protected def drawSecondaryBackgroundLayer(stack: MatrixStack) {}
+  protected def drawSecondaryBackgroundLayer(stack: PoseStack) {}
 
-  override protected def renderBg(stack: MatrixStack, dt: Float, mouseX: Int, mouseY: Int) {
-    RenderSystem.color4f(1, 1, 1, 1)
+  override protected def renderBg(stack: PoseStack, dt: Float, mouseX: Int, mouseY: Int) {
+    RenderSystem.setShader(() => GameRenderer.getPositionTexShader)
+    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F)
     Textures.bind(Textures.GUI.Background)
     blit(stack, leftPos, topPos, 0, 0, imageWidth, imageHeight)
     drawSecondaryBackgroundLayer(stack)
 
     RenderState.makeItBlend()
-    RenderSystem.disableLighting()
 
     drawInventorySlots(stack)
   }
 
-  protected def drawInventorySlots(stack: MatrixStack): Unit = {
+  protected def drawInventorySlots(stack: PoseStack): Unit = {
     stack.pushPose()
     stack.translate(leftPos, topPos, 0)
     RenderSystem.disableDepthTest()
@@ -77,13 +76,13 @@ abstract class DynamicGuiContainer[C <: Container](container: C, inv: PlayerInve
     RenderState.makeItBlend()
   }
 
-  override def render(stack: MatrixStack, mouseX: Int, mouseY: Int, dt: Float) {
+  override def render(stack: PoseStack, mouseX: Int, mouseY: Int, dt: Float) {
     hoveredStackNEI = ItemSearch.hoveredStack(this, mouseX, mouseY)
 
     super.render(stack, mouseX, mouseY, dt)
   }
 
-  protected def drawSlotInventory(stack: MatrixStack, slot: Slot) {
+  protected def drawSlotInventory(stack: PoseStack, slot: Slot) {
     RenderSystem.enableBlend()
     slot match {
       case component: ComponentSlot if component.slot == common.Slot.None || component.tier == common.Tier.None =>
@@ -100,11 +99,11 @@ abstract class DynamicGuiContainer[C <: Container](container: C, inv: PlayerInve
             case component: ComponentSlot =>
               if (component.tierIcon != null) {
                 Textures.bind(component.tierIcon)
-                AbstractGui.blit(stack, slot.x, slot.y, getBlitOffset, 0, 0, 16, 16, 16, 16)
+                GuiComponent.blit(stack, slot.x, slot.y, getBlitOffset, 0, 0, 16, 16, 16, 16)
               }
               if (component.hasBackground) {
                 Textures.bind(component.getBackgroundLocation)
-                AbstractGui.blit(stack, slot.x, slot.y, getBlitOffset, 0, 0, 16, 16, 16, 16)
+                GuiComponent.blit(stack, slot.x, slot.y, getBlitOffset, 0, 0, 16, 16, 16, 16)
               }
             case _ =>
           }
@@ -114,8 +113,8 @@ abstract class DynamicGuiContainer[C <: Container](container: C, inv: PlayerInve
     RenderSystem.disableBlend()
   }
 
-  protected def drawSlotHighlight(matrix: MatrixStack, slot: Slot) {
-    if (minecraft.player.inventory.getCarried.isEmpty) slot match {
+  protected def drawSlotHighlight(matrix: PoseStack, slot: Slot) {
+    if (minecraft.player.containerMenu.getCarried.isEmpty) slot match {
       case component: ComponentSlot if component.slot == common.Slot.None || component.tier == common.Tier.None => // Ignore.
       case _ =>
         val currentIsInPlayerInventory = isInPlayerInventory(slot)
@@ -146,18 +145,20 @@ abstract class DynamicGuiContainer[C <: Container](container: C, inv: PlayerInve
     case _ => false
   }
 
-  protected def drawDisabledSlot(stack: MatrixStack, slot: ComponentSlot) {
-    RenderSystem.color4f(1, 1, 1, 1)
+  protected def drawDisabledSlot(stack: PoseStack, slot: ComponentSlot) {
+    RenderSystem.setShader(() => GameRenderer.getPositionTexShader)
+    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F)
     Textures.bind(slot.tierIcon)
-    AbstractGui.blit(stack, slot.x, slot.y, getBlitOffset, 0, 0, 16, 16, 16, 16)
+    GuiComponent.blit(stack, slot.x, slot.y, getBlitOffset, 0, 0, 16, 16, 16, 16)
   }
 
-  protected def drawSlotBackground(stack: MatrixStack, x: Int, y: Int) {
-    RenderSystem.color4f(1, 1, 1, 1)
+  protected def drawSlotBackground(stack: PoseStack, x: Int, y: Int) {
+    RenderSystem.setShader(() => GameRenderer.getPositionTexShader)
+    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F)
     Textures.bind(Textures.GUI.Slot)
-    val t = Tessellator.getInstance
+    val t = Tesselator.getInstance
     val r = t.getBuilder
-    r.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX)
+    r.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX)
     r.vertex(stack.last.pose, x, y + 18, getBlitOffset + 1).uv(0, 1).endVertex()
     r.vertex(stack.last.pose, x + 18, y + 18, getBlitOffset + 1).uv(1, 1).endVertex()
     r.vertex(stack.last.pose, x + 18, y, getBlitOffset + 1).uv(1, 0).endVertex()

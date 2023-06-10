@@ -3,17 +3,17 @@ package li.cil.oc.common.container
 import li.cil.oc.common.Slot
 import li.cil.oc.common.Tier
 import li.cil.oc.common.item.data.PrintData
-import li.cil.oc.common.tileentity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.inventory.IInventory
-import net.minecraft.inventory.container.ContainerType
-import net.minecraft.nbt.CompoundNBT
+import li.cil.oc.common.blockentity
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.world.Container
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.inventory.MenuType
+import net.minecraft.world.item.ItemStack
 
-class Printer(selfType: ContainerType[_ <: Printer], id: Int, playerInventory: PlayerInventory, val printer: IInventory)
+class Printer(selfType: MenuType[_ <: Printer], id: Int, playerInventory: Inventory, val printer: Container)
   extends Player(selfType, id, playerInventory, printer) {
 
-  override protected def getHostClass = classOf[tileentity.Printer]
+  override protected def getHostClass = classOf[blockentity.Printer]
 
   addSlot(new StaticComponentSlot(this, otherInventory, slots.size, 18, 19, getHostClass, Slot.Filtered, Tier.Any) {
     override def mayPlace(stack: ItemStack): Boolean = {
@@ -42,9 +42,9 @@ class Printer(selfType: ContainerType[_ <: Printer], id: Int, playerInventory: P
 
   def amountInk = synchronizedData.getInt("amountInk")
 
-  override protected def detectCustomDataChanges(nbt: CompoundNBT): Unit = {
+  override protected def detectCustomDataChanges(nbt: CompoundTag): Unit = {
     printer match {
-      case te: tileentity.Printer => {
+      case te: blockentity.Printer => {
         synchronizedData.putDouble("progress", if (te.isPrinting) te.progress / 100.0 else 0)
         synchronizedData.putInt("maxAmountMaterial", te.maxAmountMaterial)
         synchronizedData.putInt("amountMaterial", te.amountMaterial)

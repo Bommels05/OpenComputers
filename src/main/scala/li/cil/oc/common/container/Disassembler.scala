@@ -2,23 +2,22 @@ package li.cil.oc.common.container
 
 import li.cil.oc.Settings
 import li.cil.oc.api
-import li.cil.oc.common.Slot
 import li.cil.oc.common.Tier
 import li.cil.oc.common.template.DisassemblerTemplates
-import li.cil.oc.common.tileentity
+import li.cil.oc.common.blockentity
 import li.cil.oc.util.ItemUtils
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.inventory.IInventory
-import net.minecraft.inventory.container.ContainerType
-import net.minecraft.nbt.CompoundNBT
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.world.Container
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.inventory.MenuType
+import net.minecraft.world.item.ItemStack
 
-class Disassembler(selfType: ContainerType[_ <: Disassembler], id: Int, playerInventory: PlayerInventory, val disassembler: IInventory)
+class Disassembler(selfType: MenuType[_ <: Disassembler], id: Int, playerInventory: Inventory, val disassembler: Container)
   extends Player(selfType, id, playerInventory, disassembler) {
 
   private def allowDisassembling(stack: ItemStack) = !stack.isEmpty && (!stack.hasTag || !stack.getTag.getBoolean(Settings.namespace + "undisassemblable"))
 
-  override protected def getHostClass = classOf[tileentity.Disassembler]
+  override protected def getHostClass = classOf[blockentity.Disassembler]
 
   addSlot(new StaticComponentSlot(this, otherInventory, slots.size, 80, 35, getHostClass, "ocitem", Tier.Any) {
     override def mayPlace(stack: ItemStack): Boolean = {
@@ -33,9 +32,9 @@ class Disassembler(selfType: ContainerType[_ <: Disassembler], id: Int, playerIn
 
   def disassemblyProgress = synchronizedData.getDouble("disassemblyProgress")
 
-  override protected def detectCustomDataChanges(nbt: CompoundNBT): Unit = {
+  override protected def detectCustomDataChanges(nbt: CompoundTag): Unit = {
     disassembler match {
-      case te: tileentity.Disassembler => synchronizedData.putDouble("disassemblyProgress", te.progress)
+      case te: blockentity.Disassembler => synchronizedData.putDouble("disassemblyProgress", te.progress)
       case _ =>
     }
     super.detectCustomDataChanges(nbt)

@@ -6,38 +6,36 @@ import li.cil.oc.api.machine.Arguments
 import li.cil.oc.api.machine.Callback
 import li.cil.oc.api.machine.Context
 import li.cil.oc.api.network.ManagedEnvironment
-import li.cil.oc.api.prefab.DriverSidedTileEntity
+import li.cil.oc.api.prefab.DriverSidedBlockEntity
 import li.cil.oc.integration.ManagedTileEntityEnvironment
 import li.cil.oc.util.ResultWrapper.result
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
-import net.minecraft.item.ItemStack
-import net.minecraft.tileentity.CommandBlockTileEntity
-import net.minecraft.util.Direction
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
-import net.minecraftforge.fml.server.ServerLifecycleHooks
+import net.minecraft.core.{BlockPos, Direction}
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.{Block, Blocks}
+import net.minecraft.world.level.block.entity.CommandBlockEntity
+import net.minecraftforge.server.ServerLifecycleHooks
 
-object DriverCommandBlock extends DriverSidedTileEntity {
-  override def getTileEntityClass: Class[_] = classOf[CommandBlockTileEntity]
+object DriverCommandBlock extends DriverSidedBlockEntity {
+  override def getBlockEntityClass: Class[_] = classOf[CommandBlockEntity]
 
-  override def createEnvironment(world: World, pos: BlockPos, side: Direction): ManagedEnvironment =
-    new Environment(world.getBlockEntity(pos).asInstanceOf[CommandBlockTileEntity])
+  override def createEnvironment(world: Level, pos: BlockPos, side: Direction): ManagedEnvironment =
+    new Environment(world.getBlockEntity(pos).asInstanceOf[CommandBlockEntity])
 
-  final class Environment(tileEntity: CommandBlockTileEntity) extends ManagedTileEntityEnvironment[CommandBlockTileEntity](tileEntity, "command_block") with NamedBlock {
+  final class Environment(blockEntity: CommandBlockEntity) extends ManagedTileEntityEnvironment[CommandBlockEntity](blockEntity, "command_block") with NamedBlock {
     override def preferredName = "command_block"
 
     override def priority = 0
 
     @Callback(direct = true, doc = "function():string -- Get the command currently set in this command block.")
     def getCommand(context: Context, args: Arguments): Array[AnyRef] = {
-      result(tileEntity.getCommandBlock.getCommand)
+      result(blockEntity.getCommandBlock.getCommand)
     }
 
     @Callback(doc = "function(value:string) -- Set the specified command for the command block.")
     def setCommand(context: Context, args: Arguments): Array[AnyRef] = {
-      tileEntity.getCommandBlock.setCommand(args.checkString(0))
-      tileEntity.getLevel.sendBlockUpdated(tileEntity.getBlockPos, tileEntity.getLevel.getBlockState(tileEntity.getBlockPos), tileEntity.getLevel.getBlockState(tileEntity.getBlockPos), 3)
+      blockEntity.getCommandBlock.setCommand(args.checkString(0))
+      blockEntity.getLevel.sendBlockUpdated(blockEntity.getBlockPos, blockEntity.getLevel.getBlockState(blockEntity.getBlockPos), blockEntity.getLevel.getBlockState(blockEntity.getBlockPos), 3)
       result(true)
     }
 
@@ -47,8 +45,8 @@ object DriverCommandBlock extends DriverSidedTileEntity {
       if (!ServerLifecycleHooks.getCurrentServer.isCommandBlockEnabled) {
         result(null, "command blocks are disabled")
       } else {
-        val commandSender = tileEntity.getCommandBlock
-        commandSender.performCommand(tileEntity.getLevel)
+        val commandSender = blockEntity.getCommandBlock
+        commandSender.performCommand(blockEntity.getLevel)
         result(commandSender.getSuccessCount, commandSender.getLastOutput.getString)
       }
     }

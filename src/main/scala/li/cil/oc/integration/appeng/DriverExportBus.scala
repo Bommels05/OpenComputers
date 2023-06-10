@@ -1,5 +1,5 @@
 package li.cil.oc.integration.appeng
-
+/*
 import appeng.api.config.{Actionable, FuzzyMode, Settings, Upgrades}
 import appeng.api.implementations.IUpgradeableHost
 import appeng.api.implementations.tiles.ISegmentedInventory
@@ -134,3 +134,4 @@ object DriverExportBus extends driver.DriverBlock {
   }
 
 }
+ */

@@ -1,7 +1,6 @@
 package li.cil.oc.server
 
 import java.io.InputStream
-
 import li.cil.oc.Localization
 import li.cil.oc.api
 import li.cil.oc.api.internal.Server
@@ -16,24 +15,22 @@ import li.cil.oc.common.entity.DroneInventory
 import li.cil.oc.common.item.{Tablet, TabletWrapper}
 import li.cil.oc.common.item.data.DriveData
 import li.cil.oc.common.item.traits.FileSystemLike
-import li.cil.oc.common.tileentity._
-import li.cil.oc.common.tileentity.traits.Computer
+import li.cil.oc.common.blockentity._
+import li.cil.oc.common.blockentity.traits.Computer
 import li.cil.oc.common.{PacketHandler => CommonPacketHandler}
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.ServerPlayerEntity
-import net.minecraft.nbt.CompoundNBT
-import net.minecraft.util.Hand
-import net.minecraft.util.RegistryKey
-import net.minecraft.util.ResourceLocation
-import net.minecraft.util.Util
-import net.minecraft.util.registry.Registry
-import net.minecraft.world.World
-import net.minecraftforge.eventbus.api.SubscribeEvent
-import net.minecraftforge.fml.server.ServerLifecycleHooks
+import net.minecraft.Util
+import net.minecraft.core.Registry
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.resources.{ResourceKey, ResourceLocation}
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.level.Level
+import net.minecraftforge.server.ServerLifecycleHooks
 
 object PacketHandler extends CommonPacketHandler {
-  override protected def world(player: PlayerEntity, dimension: ResourceLocation): Option[World] =
-    Option(ServerLifecycleHooks.getCurrentServer.getLevel(RegistryKey.create(Registry.DIMENSION_REGISTRY, dimension)))
+  override protected def world(player: Player, dimension: ResourceLocation): Option[Level] =
+    Option(ServerLifecycleHooks.getCurrentServer.getLevel(ResourceKey.create(Registry.DIMENSION_REGISTRY, dimension)))
 
   override def dispatch(p: PacketParser) {
     p.packetType match {
@@ -68,13 +65,13 @@ object PacketHandler extends CommonPacketHandler {
     p.player.containerMenu match {
       case computer: container.Case if computer.containerId == containerId => {
         (computer.otherInventory, p.player) match {
-          case (te: Computer, player: ServerPlayerEntity) => trySetComputerPower(te.machine, setPower, player)
+          case (te: Computer, player: ServerPlayer) => trySetComputerPower(te.machine, setPower, player)
           case _ =>
         }
       }
       case robot: container.Robot if robot.containerId == containerId => {
         (robot.otherInventory, p.player) match {
-          case (te: Computer, player: ServerPlayerEntity) => trySetComputerPower(te.machine, setPower, player)
+          case (te: Computer, player: ServerPlayer) => trySetComputerPower(te.machine, setPower, player)
           case _ =>
         }
       }
@@ -89,7 +86,7 @@ object PacketHandler extends CommonPacketHandler {
     p.player.containerMenu match {
       case server: container.Server if server.containerId == containerId => {
         (server.otherInventory, p.player) match {
-          case (comp: component.Server, player: ServerPlayerEntity) if comp.rack.getMountable(index) == comp =>
+          case (comp: component.Server, player: ServerPlayer) if comp.rack.getMountable(index) == comp =>
             trySetComputerPower(comp.machine, setPower, player)
           case _ => // Invalid packet.
         }
@@ -102,14 +99,14 @@ object PacketHandler extends CommonPacketHandler {
     val text = p.readUTF()
     val line = p.readInt()
     ComponentTracker.get(p.player.level, text) match {
-      case Some(buffer: TextBuffer) => buffer.copyToAnalyzer(line, p.player.asInstanceOf[PlayerEntity])
+      case Some(buffer: TextBuffer) => buffer.copyToAnalyzer(line, p.player.asInstanceOf[Player])
       case _ => // Invalid Packet
     }
   }
 
   def onDriveLock(p: PacketParser): Unit = p.player match {
-    case player: ServerPlayerEntity => {
-      val heldItem = player.getItemInHand(Hand.MAIN_HAND)
+    case player: ServerPlayer => {
+      val heldItem = player.getItemInHand(InteractionHand.MAIN_HAND)
       heldItem.getItem match {
         case drive: FileSystemLike => DriveData.lock(heldItem, player)
         case _ => // Invalid packet
@@ -121,8 +118,8 @@ object PacketHandler extends CommonPacketHandler {
   def onDriveMode(p: PacketParser): Unit = {
     val unmanaged = p.readBoolean()
     p.player match {
-      case player: ServerPlayerEntity =>
-        val heldItem = player.getItemInHand(Hand.MAIN_HAND)
+      case player: ServerPlayer =>
+        val heldItem = player.getItemInHand(InteractionHand.MAIN_HAND)
         heldItem.getItem match {
           case drive: FileSystemLike => DriveData.setUnmanaged(heldItem, unmanaged)
           case _ => // Invalid packet.
@@ -137,7 +134,7 @@ object PacketHandler extends CommonPacketHandler {
     p.player.containerMenu match {
       case drone: container.Drone if drone.containerId == containerId => {
         (drone.otherInventory, p.player) match {
-          case (droneInv: DroneInventory, player: ServerPlayerEntity) => trySetComputerPower(droneInv.drone.machine, power, player)
+          case (droneInv: DroneInventory, player: ServerPlayer) => trySetComputerPower(droneInv.drone.machine, power, player)
           case _ =>
         }
       }
@@ -145,7 +142,7 @@ object PacketHandler extends CommonPacketHandler {
     }
   }
 
-  private def trySetComputerPower(computer: Machine, value: Boolean, player: ServerPlayerEntity) {
+  private def trySetComputerPower(computer: Machine, value: Boolean, player: ServerPlayer) {
     if (computer.canInteract(player.getName.getString)) {
       if (value) {
         if (!computer.isPaused) {
@@ -165,7 +162,7 @@ object PacketHandler extends CommonPacketHandler {
     val key = p.readChar()
     val code = p.readInt()
     ComponentTracker.get(p.player.level, address) match {
-      case Some(buffer: api.internal.TextBuffer) => buffer.keyDown(key, code, p.player.asInstanceOf[PlayerEntity])
+      case Some(buffer: api.internal.TextBuffer) => buffer.keyDown(key, code, p.player.asInstanceOf[Player])
       case _ => // Invalid Packet
     }
   }
@@ -175,7 +172,7 @@ object PacketHandler extends CommonPacketHandler {
     val key = p.readChar()
     val code = p.readInt()
     ComponentTracker.get(p.player.level, address) match {
-      case Some(buffer: api.internal.TextBuffer) => buffer.keyUp(key, code, p.player.asInstanceOf[PlayerEntity])
+      case Some(buffer: api.internal.TextBuffer) => buffer.keyUp(key, code, p.player.asInstanceOf[Player])
       case _ => // Invalid Packet
     }
   }
@@ -185,7 +182,7 @@ object PacketHandler extends CommonPacketHandler {
     val codePt = p.readInt()
     if (codePt >= 0 && codePt <= Character.MAX_CODE_POINT) {
       ComponentTracker.get(p.player.level, address) match {
-        case Some(buffer: api.internal.TextBuffer) => buffer.textInput(codePt, p.player.asInstanceOf[PlayerEntity])
+        case Some(buffer: api.internal.TextBuffer) => buffer.textInput(codePt, p.player.asInstanceOf[Player])
         case _ => // Invalid Packet
       }
     }
@@ -195,7 +192,7 @@ object PacketHandler extends CommonPacketHandler {
     val address = p.readUTF()
     val copy = p.readUTF()
     ComponentTracker.get(p.player.level, address) match {
-      case Some(buffer: api.internal.TextBuffer) => buffer.clipboard(copy, p.player.asInstanceOf[PlayerEntity])
+      case Some(buffer: api.internal.TextBuffer) => buffer.clipboard(copy, p.player.asInstanceOf[Player])
       case _ => // Invalid Packet
     }
   }
@@ -208,7 +205,7 @@ object PacketHandler extends CommonPacketHandler {
     val button = p.readByte()
     ComponentTracker.get(p.player.level, address) match {
       case Some(buffer: api.internal.TextBuffer) =>
-        val player = p.player.asInstanceOf[PlayerEntity]
+        val player = p.player.asInstanceOf[Player]
         if (dragging) buffer.mouseDrag(x, y, button, player)
         else buffer.mouseDown(x, y, button, player)
       case _ => // Invalid Packet
@@ -222,7 +219,7 @@ object PacketHandler extends CommonPacketHandler {
     val button = p.readByte()
     ComponentTracker.get(p.player.level, address) match {
       case Some(buffer: api.internal.TextBuffer) =>
-        val player = p.player.asInstanceOf[PlayerEntity]
+        val player = p.player.asInstanceOf[Player]
         buffer.mouseUp(x, y, button, player)
       case _ => // Invalid Packet
     }
@@ -235,7 +232,7 @@ object PacketHandler extends CommonPacketHandler {
     val button = p.readByte()
     ComponentTracker.get(p.player.level, address) match {
       case Some(buffer: api.internal.TextBuffer) =>
-        val player = p.player.asInstanceOf[PlayerEntity]
+        val player = p.player.asInstanceOf[Player]
         buffer.mouseScroll(x, y, button, player)
       case _ => // Invalid Packet
     }
@@ -244,7 +241,7 @@ object PacketHandler extends CommonPacketHandler {
   def onPetVisibility(p: PacketParser) {
     val value = p.readBoolean()
     p.player match {
-      case player: ServerPlayerEntity =>
+      case player: ServerPlayer =>
         if (if (value) {
           PetVisibility.hidden.remove(player.getName.getString)
         }
@@ -266,7 +263,7 @@ object PacketHandler extends CommonPacketHandler {
     p.player.containerMenu match {
       case rack: container.Rack if rack.containerId == containerId => {
         (rack.otherInventory, p.player) match {
-          case (t: Rack, player: ServerPlayerEntity) if t.stillValid(player) =>
+          case (t: Rack, player: ServerPlayer) if t.stillValid(player) =>
             t.connect(mountableIndex, nodeIndex, side)
           case _ =>
         }
@@ -281,7 +278,7 @@ object PacketHandler extends CommonPacketHandler {
     p.player.containerMenu match {
       case rack: container.Rack if rack.containerId == containerId => {
         (rack.otherInventory, p.player) match {
-          case (t: Rack, player: ServerPlayerEntity) if t.stillValid(player) =>
+          case (t: Rack, player: ServerPlayer) if t.stillValid(player) =>
           t.isRelayEnabled = enabled
           case _ =>
         }
@@ -297,7 +294,7 @@ object PacketHandler extends CommonPacketHandler {
         assembler.assembler match {
           case te: Assembler =>
             if (te.start(p.player match {
-              case player: ServerPlayerEntity => player.isCreative
+              case player: ServerPlayer => player.isCreative
               case _ => false
             })) te.output.foreach(stack => Achievement.onAssemble(stack, p.player))
           case _ =>
@@ -315,7 +312,7 @@ object PacketHandler extends CommonPacketHandler {
   }
 
   def onMachineItemStateRequest(p: PacketParser): Unit = p.player match {
-    case player: ServerPlayerEntity => {
+    case player: ServerPlayer => {
       val stack = p.readItemStack()
       PacketSender.sendMachineItemState(player, stack, Tablet.get(stack, p.player).machine.isRunning)
     }
@@ -325,14 +322,14 @@ object PacketHandler extends CommonPacketHandler {
   def onTextBufferInit(p: PacketParser) {
     val address = p.readUTF()
     p.player match {
-      case entity: ServerPlayerEntity =>
+      case entity: ServerPlayer =>
         ComponentTracker.get(p.player.level, address) match {
           case Some(buffer: TextBuffer) =>
             if (buffer.host match {
               case screen: Screen if !screen.isOrigin => false
               case _ => true
             }) {
-              val nbt = new CompoundNBT()
+              val nbt = new CompoundTag()
               buffer.data.saveData(nbt)
               nbt.putInt("maxWidth", buffer.getMaximumWidth)
               nbt.putInt("maxHeight", buffer.getMaximumHeight)
@@ -351,7 +348,7 @@ object PacketHandler extends CommonPacketHandler {
     val label = p.readUTF().take(32)
     entity match {
       case Some(waypoint) => p.player match {
-        case player: ServerPlayerEntity if player.distanceToSqr(waypoint.x + 0.5, waypoint.y + 0.5, waypoint.z + 0.5) <= 64 =>
+        case player: ServerPlayer if player.distanceToSqr(waypoint.x + 0.5, waypoint.y + 0.5, waypoint.z + 0.5) <= 64 =>
           if (label != waypoint.label) {
             waypoint.label = label
             PacketSender.sendWaypointLabel(waypoint)
@@ -362,5 +359,5 @@ object PacketHandler extends CommonPacketHandler {
     }
   }
 
-  protected override def createParser(stream: InputStream, player: PlayerEntity) = new PacketParser(stream, player)
+  protected override def createParser(stream: InputStream, player: Player) = new PacketParser(stream, player)
 }

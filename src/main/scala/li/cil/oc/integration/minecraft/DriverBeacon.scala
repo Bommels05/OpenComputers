@@ -6,45 +6,43 @@ import li.cil.oc.api.machine.Arguments
 import li.cil.oc.api.machine.Callback
 import li.cil.oc.api.machine.Context
 import li.cil.oc.api.network.ManagedEnvironment
-import li.cil.oc.api.prefab.DriverSidedTileEntity
+import li.cil.oc.api.prefab.DriverSidedBlockEntity
 import li.cil.oc.integration.ManagedTileEntityEnvironment
 import li.cil.oc.util.ResultWrapper.result
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
-import net.minecraft.item.ItemStack
-import net.minecraft.potion.Effect
-import net.minecraft.tileentity.BeaconTileEntity
-import net.minecraft.util.Direction
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.core.{BlockPos, Direction}
+import net.minecraft.world.effect.MobEffect
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.{Block, Blocks}
+import net.minecraft.world.level.block.entity.BeaconBlockEntity
 
-object DriverBeacon extends DriverSidedTileEntity {
-  override def getTileEntityClass: Class[_] = classOf[BeaconTileEntity]
+object DriverBeacon extends DriverSidedBlockEntity {
+  override def getBlockEntityClass: Class[_] = classOf[BeaconBlockEntity]
 
-  override def createEnvironment(world: World, pos: BlockPos, side: Direction): ManagedEnvironment =
-    new Environment(world.getBlockEntity(pos).asInstanceOf[BeaconTileEntity])
+  override def createEnvironment(world: Level, pos: BlockPos, side: Direction): ManagedEnvironment =
+    new Environment(world.getBlockEntity(pos).asInstanceOf[BeaconBlockEntity])
 
-  final class Environment(tileEntity: BeaconTileEntity) extends ManagedTileEntityEnvironment[BeaconTileEntity](tileEntity, "beacon") with NamedBlock {
+  final class Environment(blockEntity: BeaconBlockEntity) extends ManagedTileEntityEnvironment[BeaconBlockEntity](blockEntity, "beacon") with NamedBlock {
     override def preferredName = "beacon"
 
     override def priority = 0
 
     @Callback(doc = "function():number -- Get the number of levels for this beacon.")
     def getLevels(context: Context, args: Arguments): Array[AnyRef] = {
-      result(tileEntity.getLevels)
+      result(blockEntity.levels)
     }
 
     @Callback(doc = "function():string -- Get the name of the active primary effect.")
     def getPrimaryEffect(context: Context, args: Arguments): Array[AnyRef] = {
-      result(getEffectName(tileEntity.primaryPower))
+      result(getEffectName(blockEntity.primaryPower))
     }
 
     @Callback(doc = "function():string -- Get the name of the active secondary effect.")
     def getSecondaryEffect(context: Context, args: Arguments): Array[AnyRef] = {
-      result(getEffectName(tileEntity.secondaryPower))
+      result(getEffectName(blockEntity.secondaryPower))
     }
 
-    private def getEffectName(effect: Effect): String = {
+    private def getEffectName(effect: MobEffect): String = {
       if (effect != null) effect.getRegistryName.toString else null
     }
   }

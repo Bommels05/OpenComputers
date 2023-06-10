@@ -1,25 +1,19 @@
 package li.cil.oc.common.event
 
-import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.math.Vector3f
 import li.cil.oc.Constants
 import li.cil.oc.api
 import li.cil.oc.api.event.RackMountableRenderEvent
+import li.cil.oc.api.event.RackMountableRenderEvent.BlockEntity
 import li.cil.oc.client.Textures
 import li.cil.oc.client.renderer.RenderTypes
-import li.cil.oc.client.renderer.tileentity.RenderUtil
-import li.cil.oc.util.BlockPosition
-import li.cil.oc.util.ExtendedWorld._
-import li.cil.oc.util.RenderState
+import li.cil.oc.client.renderer.blockentity.RenderUtil
 import net.minecraft.client.Minecraft
-import net.minecraft.client.renderer.model.ItemCameraTransforms
-import net.minecraft.entity.item.ItemEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.util.ResourceLocation
-import net.minecraft.util.math.vector.Vector3f
-import net.minecraftforge.common.util.Constants.NBT
+import net.minecraft.client.renderer.block.model.ItemTransforms
+import net.minecraft.nbt.Tag
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.item.ItemStack
 import net.minecraftforge.eventbus.api.SubscribeEvent
-import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL13
 
 object RackMountableRenderHandler {
   lazy val DiskDriveMountable = api.Items.get(Constants.ItemName.DiskDriveMountable)
@@ -34,7 +28,7 @@ object RackMountableRenderHandler {
   lazy val TerminalServer = api.Items.get(Constants.ItemName.TerminalServer)
 
   @SubscribeEvent
-  def onRackMountableRendering(e: RackMountableRenderEvent.TileEntity): Unit = {
+  def onRackMountableRendering(e: BlockEntity): Unit = {
     if (e.data != null && DiskDriveMountable == api.Items.get(e.rack.getItem(e.mountable))) {
       // Disk drive.
 
@@ -48,7 +42,7 @@ object RackMountableRenderHandler {
           matrix.mulPose(Vector3f.XN.rotationDegrees(90))
           matrix.scale(0.5f, 0.5f, 0.5f)
 
-          Minecraft.getInstance.getItemRenderer.renderStatic(stack, ItemCameraTransforms.TransformType.FIXED, e.light, e.overlay, matrix, e.typeBuffer)
+          Minecraft.getInstance.getItemRenderer.renderStatic(stack, ItemTransforms.TransformType.FIXED, e.light, e.overlay, matrix, e.typeBuffer, 0)
           matrix.popPose()
         }
       }
@@ -75,7 +69,7 @@ object RackMountableRenderHandler {
     else if (e.data != null && TerminalServer == api.Items.get(e.rack.getItem(e.mountable))) {
       // Terminal server.
       renderOverlayFromAtlas(e, Textures.Block.RackTerminalServerOn)
-      val countConnected = e.data.getList("keys", NBT.TAG_STRING).size()
+      val countConnected = e.data.getList("keys", Tag.TAG_STRING).size()
 
       if (countConnected > 0) {
         val u0 = 7 / 16f
@@ -85,7 +79,7 @@ object RackMountableRenderHandler {
     }
   }
 
-  private def renderOverlayFromAtlas(e: RackMountableRenderEvent.TileEntity, texture: ResourceLocation, u0: Float = 0, u1: Float = 1) {
+  private def renderOverlayFromAtlas(e: BlockEntity, texture: ResourceLocation, u0: Float = 0, u1: Float = 1) {
     val matrix = e.stack.last.pose
     val r = e.typeBuffer.getBuffer(RenderTypes.BLOCK_OVERLAY)
     val icon = Textures.getSprite(texture)

@@ -1,73 +1,109 @@
 package li.cil.oc.client.renderer.item
 
-import com.mojang.blaze3d.matrix.MatrixStack
-import com.mojang.blaze3d.vertex.IVertexBuilder
+import com.mojang.blaze3d.vertex.{PoseStack, VertexConsumer}
 import li.cil.oc.Settings
+import li.cil.oc.client.renderer.item.HoverBootRenderer.{texHeight, texWidth}
+import net.minecraft.client.model.{HumanoidModel, PlayerModel}
+import net.minecraft.client.model.geom.ModelPart
+import net.minecraft.client.model.geom.builders.{CubeDeformation, CubeListBuilder}
 import net.minecraft.client.renderer.LightTexture
-import net.minecraft.client.renderer.model.Model
-import net.minecraft.client.renderer.model.ModelRenderer
-import net.minecraft.client.renderer.entity.model.BipedModel
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.entity.LivingEntity
-import net.minecraft.util.ResourceLocation
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.entity.LivingEntity
 
-object HoverBootRenderer extends BipedModel[LivingEntity](0.5f) {
+import java.util
+
+object HoverBootRenderer extends HumanoidModel[LivingEntity](PlayerModel.createMesh(new CubeDeformation(1) , true).getRoot.bake(64, 32)) {
   val texture = new ResourceLocation(Settings.resourceDomain, "textures/model/drone.png")
 
-  val bootLeft = new ModelRenderer(this)
-  val bootRight = new ModelRenderer(this)
-  val droneBody = new ModelRenderer(this)
-  val wing0 = new ModelRenderer(this)
-  val wing1 = new ModelRenderer(this)
-  val wing2 = new ModelRenderer(this)
-  val wing3 = new ModelRenderer(this)
-  val light0 = new LightModelRenderer(this)
-  val light1 = new LightModelRenderer(this)
-  val light2 = new LightModelRenderer(this)
-  val light3 = new LightModelRenderer(this)
+  val texWidth = 64
+  val texHeight = 32
 
-  bootLeft.addChild(droneBody)
-  bootLeft.addChild(wing0)
-  bootLeft.addChild(wing1)
-
-  bootRight.addChild(droneBody)
-  bootRight.addChild(wing2)
-  bootRight.addChild(wing3)
-
-  wing0.addChild(light0)
-  wing1.addChild(light1)
-  wing2.addChild(light2)
-  wing3.addChild(light3)
-
-  texWidth = 64
-  texHeight = 32
+  val droneBody = new ModelPart({
+    val cubes = new util.ArrayList[ModelPart.Cube]()
+    CubeListBuilder.create().texOffs(0, 23).addBox(-3, 1, -3, 6, 1, 6).getCubes.forEach(cube => cubes.add(cube.bake(texWidth, texHeight))) // top
+    CubeListBuilder.create().texOffs(0, 1).addBox(-1, 0, -1, 2, 1, 2).getCubes.forEach(cube => cubes.add(cube.bake(texWidth, texHeight))) // middle
+    CubeListBuilder.create().texOffs(0, 17).addBox(-2, -1, -2, 4, 1, 4).getCubes.forEach(cube => cubes.add(cube.bake(texWidth, texHeight))) // bottom
+    cubes
+  }, new util.HashMap[String, ModelPart]())
+  val light0 = new LightModelRenderer(
+    util.Arrays.asList(CubeListBuilder.create().texOffs(24, 0).addBox(-1, 0, -7, 6, 1, 6).getCubes.get(0).bake(texWidth, texHeight)), // flap0
+    new util.HashMap[String, ModelPart]())
+  val light1 = new LightModelRenderer(
+    util.Arrays.asList(CubeListBuilder.create().texOffs(24, 0).addBox(-1, 0, 1, 6, 1, 6).getCubes.get(0).bake(texWidth, texHeight)), // flap1
+    new util.HashMap[String, ModelPart]())
+  val light2 = new LightModelRenderer(
+    util.Arrays.asList(CubeListBuilder.create().texOffs(24, 0).addBox(-5, 0, 1, 6, 1, 6).getCubes.get(0).bake(texWidth, texHeight)), // flap2
+    new util.HashMap[String, ModelPart]())
+  val light3 = new LightModelRenderer(
+    util.Arrays.asList(CubeListBuilder.create().texOffs(24, 0).addBox(-5, 0, -7, 6, 1, 6).getCubes.get(0).bake(texWidth, texHeight)), // flap3
+    new util.HashMap[String, ModelPart]())
+  val wing0 = new ModelPart({
+    val cubes = new util.ArrayList[ModelPart.Cube]()
+    CubeListBuilder.create().texOffs(0, 9).addBox(-1, 0, -7, 6, 1, 6).getCubes.forEach(cube => cubes.add(cube.bake(texWidth, texHeight))) // flap0
+    CubeListBuilder.create().texOffs(0, 27).addBox(0, -1, -3, 1, 3, 1).getCubes.forEach(cube => cubes.add(cube.bake(texWidth, texHeight))) // pin0
+    cubes
+  }, {
+    val children = new util.HashMap[String, ModelPart]()
+    children.put("light0", light0)
+    children
+  })
+  val wing1 = new ModelPart({
+    val cubes = new util.ArrayList[ModelPart.Cube]()
+    CubeListBuilder.create().texOffs(0, 9).addBox(-1, 0, 1, 6, 1, 6).getCubes.forEach(cube => cubes.add(cube.bake(texWidth, texHeight))) // flap1
+    CubeListBuilder.create().texOffs(0, 27).addBox(0, -1, 2, 1, 3, 1).getCubes.forEach(cube => cubes.add(cube.bake(texWidth, texHeight))) // pin1
+    cubes
+  }, {
+    val children = new util.HashMap[String, ModelPart]()
+    children.put("light1", light1)
+    children
+  })
+  val wing2 = new ModelPart({
+    val cubes = new util.ArrayList[ModelPart.Cube]()
+    CubeListBuilder.create().texOffs(0, 9).addBox(-5, 0, 1, 6, 1, 6).getCubes.forEach(cube => cubes.add(cube.bake(texWidth, texHeight))) // flap2
+    CubeListBuilder.create().texOffs(0, 27).addBox(-1, -1, 2, 1, 3, 1).getCubes.forEach(cube => cubes.add(cube.bake(texWidth, texHeight))) // pin2
+    cubes
+  }, {
+    val children = new util.HashMap[String, ModelPart]()
+    children.put("light2", light2)
+    children
+  })
+  val wing3 = new ModelPart({
+    val cubes = new util.ArrayList[ModelPart.Cube]()
+    CubeListBuilder.create().texOffs(0, 9).addBox(-5, 0, -7, 6, 1, 6).getCubes.forEach(cube => cubes.add(cube.bake(texWidth, texHeight))) // flap3
+    CubeListBuilder.create().texOffs(24, 0).addBox(-5, 0, -7, 6, 1, 6).getCubes.forEach(cube => cubes.add(cube.bake(texWidth, texHeight))) // pin3
+    cubes
+  }, {
+    val children = new util.HashMap[String, ModelPart]()
+    children.put("light3", light3)
+    children
+  })
+  val bootLeft = new ModelPart(new util.ArrayList[ModelPart.Cube](), {
+    val children = new util.HashMap[String, ModelPart]()
+    children.put("droneBody", droneBody)
+    children.put("wing0", wing0)
+    children.put("wing1", wing1)
+    children
+  })
+  val bootRight = new ModelPart(new util.ArrayList[ModelPart.Cube](), {
+    val children = new util.HashMap[String, ModelPart]()
+    children.put("droneBody", droneBody)
+    children.put("wing2", wing2)
+    children.put("wing3", wing3)
+    children
+  })
 
   bootRight.y = 10.1f
   bootLeft.y = 10.11f
 
-  droneBody.texOffs(0, 23).addBox(-3, 1, -3, 6, 1, 6).yRot = math.toRadians(45).toFloat // top
-  droneBody.texOffs(0, 1).addBox(-1, 0, -1, 2, 1, 2).yRot = math.toRadians(45).toFloat // middle
-  droneBody.texOffs(0, 17).addBox(-2, -1, -2, 4, 1, 4).yRot = math.toRadians(45).toFloat // bottom
-  wing0.texOffs(0, 9).addBox(-1, 0, -7, 6, 1, 6) // flap0
-  wing0.texOffs(0, 27).addBox(0, -1, -3, 1, 3, 1) // pin0
-  wing1.texOffs(0, 9).addBox(-1, 0, 1, 6, 1, 6) // flap1
-  wing1.texOffs(0, 27).addBox(0, -1, 2, 1, 3, 1) // pin1
-  wing2.texOffs(0, 9).addBox(-5, 0, 1, 6, 1, 6) // flap2
-  wing2.texOffs(0, 27).addBox(-1, -1, 2, 1, 3, 1) // pin2
-  wing3.texOffs(0, 9).addBox(-5, 0, -7, 6, 1, 6) // flap3
-  wing3.texOffs(0, 27).addBox(-1, -1, -3, 1, 3, 1) // pin3
-
-  light0.texOffs(24, 0).addBox(-1, 0, -7, 6, 1, 6) // flap0
-  light1.texOffs(24, 0).addBox(-1, 0, 1, 6, 1, 6) // flap1
-  light2.texOffs(24, 0).addBox(-5, 0, 1, 6, 1, 6) // flap2
-  light3.texOffs(24, 0).addBox(-5, 0, -7, 6, 1, 6) // flap3
+  droneBody.yRot = math.toRadians(45).toFloat
 
   // No drone textured legs, thank you very much.
-  leftLeg = leftLeg.createShallowCopy()
-  rightLeg = rightLeg.createShallowCopy()
+  //leftLeg = leftLeg.createShallowCopy()
+  //rightLeg = rightLeg.createShallowCopy()
 
-  leftLeg.addChild(bootLeft)
-  rightLeg.addChild(bootRight)
+  leftLeg.children.put("bootLeft", bootLeft)
+  rightLeg.children.put("bootRight", bootRight)
 
   head.visible = false
   hat.visible = false
@@ -85,8 +121,8 @@ object HoverBootRenderer extends BipedModel[LivingEntity](0.5f) {
     young = false
   }
 
-  class LightModelRenderer(modelBase: Model) extends ModelRenderer(modelBase) {
-    override def render(stack: MatrixStack, builder: IVertexBuilder, light: Int, overlay: Int, r: Float, g: Float, b: Float, a: Float): Unit = {
+  class LightModelRenderer(cubes: util.List[ModelPart.Cube], children: util.Map[String, ModelPart]) extends ModelPart(cubes, children) {
+    override def render(stack: PoseStack, builder: VertexConsumer, light: Int, overlay: Int, r: Float, g: Float, b: Float, a: Float): Unit = {
       val rm = ((lightColor >>> 16) & 0xFF) / 255f
       val gm = ((lightColor >>> 8) & 0xFF) / 255f
       val bm = ((lightColor >>> 0) & 0xFF) / 255f

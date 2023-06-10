@@ -7,9 +7,9 @@ import li.cil.oc.api.network.EnvironmentHost
 import li.cil.oc.api.network.ManagedEnvironment
 import li.cil.oc.common.Slot
 import li.cil.oc.server.component
-import li.cil.oc.util.ExtendedInventory._
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.CompoundNBT
+import li.cil.oc.util.ExtendedContainer._
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.world.item.ItemStack
 
 object DriverDiskDriveMountable extends Item with HostAware {
   override def worksWith(stack: ItemStack): Boolean = isOneOf(stack,
@@ -22,5 +22,5 @@ object DriverDiskDriveMountable extends Item with HostAware {
 
   override def slot(stack: ItemStack): String = Slot.RackMountable
 
-  override def dataTag(stack: ItemStack): CompoundNBT = stack.getOrCreateTag
+  override def dataTag(stack: ItemStack): CompoundTag = stack.getOrCreateTag
 }

@@ -1,5 +1,5 @@
 package li.cil.oc.integration.appeng
-
+/*
 import appeng.api.implementations.tiles.ISegmentedInventory
 import appeng.api.parts.{IPartHost, PartItemStack}
 import li.cil.oc.api.driver
@@ -43,3 +43,4 @@ object DriverImportBus extends driver.DriverBlock {
   }
 
 }
+ */

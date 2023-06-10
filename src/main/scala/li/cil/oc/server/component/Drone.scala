@@ -1,7 +1,6 @@
 package li.cil.oc.server.component
 
 import java.util
-
 import li.cil.oc.Constants
 import li.cil.oc.Settings
 import li.cil.oc.api.Network
@@ -17,10 +16,9 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment
 import li.cil.oc.common.entity
 import li.cil.oc.util.ExtendedArguments._
 import li.cil.oc.util.InventoryUtils
-import net.minecraft.entity.item.ItemEntity
-import net.minecraft.util.SoundEvents
-import net.minecraft.util.Direction
-import net.minecraft.util.SoundCategory
+import net.minecraft.core.Direction
+import net.minecraft.sounds.{SoundEvents, SoundSource}
+import net.minecraft.world.entity.item.ItemEntity
 
 import scala.collection.convert.ImplicitConversionsToJava._
 import scala.collection.convert.ImplicitConversionsToScala._
@@ -44,11 +42,11 @@ class Drone(val agent: entity.Drone) extends AbstractManagedEnvironment with Age
   override protected def checkSideForAction(args: Arguments, n: Int) =
     args.checkSideAny(n)
 
-  override protected def suckableItems(side: Direction) = entitiesInBlock(classOf[ItemEntity], position) ++ super.suckableItems(side)
+  override protected def suckableItems(side: Direction): util.List[ItemEntity] = entitiesInBlock(classOf[ItemEntity], position) ++ super.suckableItems(side)
 
   override protected def onSuckCollect(entity: ItemEntity) = {
     if (InventoryUtils.insertIntoInventory(entity.getItem, InventoryUtils.asItemHandler(inventory), slots = Option(insertionSlots))) {
-      world.playSound(agent.player, agent.getX, agent.getY, agent.getZ, SoundEvents.ITEM_PICKUP, SoundCategory.NEUTRAL, 0.2f, ((world.random.nextFloat - world.random.nextFloat) * 0.7f + 1) * 2)
+      world.playSound(agent.player, agent.getX, agent.getY, agent.getZ, SoundEvents.ITEM_PICKUP, SoundSource.NEUTRAL, 0.2f, ((world.random.nextFloat - world.random.nextFloat) * 0.7f + 1) * 2)
     }
   }
 

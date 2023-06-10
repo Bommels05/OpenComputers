@@ -2,18 +2,17 @@ package li.cil.oc.common.container
 
 import li.cil.oc.common.InventorySlots
 import li.cil.oc.common.Tier
-import li.cil.oc.common.tileentity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.IInventory
-import net.minecraft.inventory.container.ContainerType
-import net.minecraft.util.IntReferenceHolder
-import net.minecraft.util.text.ITextComponent
+import li.cil.oc.common.blockentity
+import net.minecraft.world.Container
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.inventory.{DataSlot, MenuType}
+import net.minecraft.world.entity.player
+import net.minecraft.world.entity
 
-class Case(selfType: ContainerType[_ <: Case], id: Int, playerInventory: PlayerInventory, computer: IInventory, tier: Int)
+class Case(selfType: MenuType[_ <: Case], id: Int, playerInventory: Inventory, computer: Container, tier: Int)
   extends Player(selfType, id, playerInventory, computer) {
 
-  override protected def getHostClass = classOf[tileentity.Case]
+  override protected def getHostClass = classOf[blockentity.Case]
 
   for (i <- 0 to (if (tier >= Tier.Three) 2 else 1)) {
     val slot = InventorySlots.computer(tier)(getItems.size)
@@ -54,20 +53,20 @@ class Case(selfType: ContainerType[_ <: Case], id: Int, playerInventory: PlayerI
   addPlayerInventorySlots(8, 84)
 
   private val runningData = computer match {
-    case te: tileentity.Case => {
-      addDataSlot(new IntReferenceHolder {
+    case te: blockentity.Case => {
+      addDataSlot(new DataSlot {
         override def get(): Int = if (te.isRunning) 1 else 0
 
         override def set(value: Int): Unit = te.setRunning(value != 0)
       })
     }
-    case _ => addDataSlot(IntReferenceHolder.standalone)
+    case _ => addDataSlot(DataSlot.standalone)
   }
   def isRunning = runningData.get != 0
 
-  override def stillValid(player: PlayerEntity) =
+  override def stillValid(player: entity.player.Player) =
     super.stillValid(player) && (computer match {
-      case te: tileentity.Case => te.canInteract(player.getName.getString)
+      case te: blockentity.Case => te.canInteract(player.getName.getString)
       case _ => true
     })
 }

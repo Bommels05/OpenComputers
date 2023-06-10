@@ -1,12 +1,12 @@
 package li.cil.oc.integration.jei
 
 import java.util
-
 import com.google.common.base.Strings
-import com.mojang.blaze3d.matrix.MatrixStack
+import com.mojang.blaze3d.vertex.PoseStack
 import li.cil.oc.OpenComputers
 import li.cil.oc.Settings
 import li.cil.oc.api
+import li.cil.oc.common.component.result
 import li.cil.oc.server.machine.Callbacks
 import mezz.jei.api.constants.VanillaTypes
 import mezz.jei.api.gui.IRecipeLayout
@@ -16,13 +16,12 @@ import mezz.jei.api.helpers.IGuiHelper
 import mezz.jei.api.ingredients.IIngredients
 import mezz.jei.api.recipe.category.IRecipeCategory
 import mezz.jei.api.registration.IRecipeRegistration
+import net.minecraft.ChatFormatting
 import net.minecraft.client.Minecraft
-import net.minecraft.item.ItemStack
-import net.minecraft.util.ICharacterConsumer
-import net.minecraft.util.ResourceLocation
-import net.minecraft.util.text.CharacterManager.ISliceAcceptor
-import net.minecraft.util.text.Style
-import net.minecraft.util.text.TextFormatting
+import net.minecraft.client.StringSplitter.LinePosConsumer
+import net.minecraft.network.chat.{Style, TextComponent}
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.item.ItemStack
 
 import scala.collection.convert.ImplicitConversionsToJava._
 import scala.collection.convert.ImplicitConversionsToScala._
@@ -42,16 +41,16 @@ object CallbackDocHandler {
         val pages = mutable.Buffer.empty[String]
         val lastPage = callbacks.toArray.sorted.foldLeft("") {
           (last, doc) =>
-            if (last.lines.length + 2 + doc.lines.length > 12) {
+            if (last.linesIterator.length + 2 + doc.linesIterator.length > 12) {
               // We've potentially got some pretty long documentation here, split it up first
-              last.lines.grouped(12).map(_.mkString("\n")).foreach(pages += _)
+              last.linesIterator.grouped(12).map(_.mkString("\n")).foreach(pages += _)
               doc
             }
             else if (last.nonEmpty) last + "\n\n" + doc
             else doc
         }
         // The last page may be too long as well.
-        lastPage.lines.grouped(12).map(_.mkString("\n")).foreach(pages += _)
+        lastPage.linesIterator.grouped(12).map(_.mkString("\n")).foreach(pages += _)
 
         Option(pages.map(page => new CallbackDocRecipe(stack, page)))
       }
@@ -70,8 +69,8 @@ object CallbackDocHandler {
             case VexPattern(head, tail) => (name + head, tail)
             case _ => (name, doc)
           }
-          wrap(signature, 160).map(TextFormatting.BLACK.toString + _).mkString("\n") +
-            TextFormatting.RESET + "\n" +
+          wrap(signature, 160).map(ChatFormatting.BLACK.toString + _).mkString("\n") +
+            ChatFormatting.RESET + "\n" +
             wrap(documentation, 152).map("  " + _).mkString("\n")
         }
     }
@@ -80,7 +79,7 @@ object CallbackDocHandler {
 
   protected def wrap(line: String, width: Int): util.List[String] = {
     val list = new util.ArrayList[String]
-    Minecraft.getInstance.font.getSplitter.splitLines(line, width, Style.EMPTY, true, new ISliceAcceptor {
+    Minecraft.getInstance.font.getSplitter.splitLines(line, width, Style.EMPTY, true, new LinePosConsumer {
       override def accept(style: Style, start: Int, end: Int) = list.add(line.substring(start, end))
     })
     list
@@ -113,15 +112,15 @@ object CallbackDocHandler {
     override def setRecipe(recipeLayout: IRecipeLayout, recipeWrapper: CallbackDocRecipe, ingredients: IIngredients) {
     }
 
-    override def draw(recipeWrapper: CallbackDocRecipe, stack: MatrixStack, mouseX: Double, mouseY: Double): Unit = {
+    override def draw(recipeWrapper: CallbackDocRecipe, stack: PoseStack, mouseX: Double, mouseY: Double): Unit = {
       val minecraft = Minecraft.getInstance
-      for ((text, line) <- recipeWrapper.page.lines.zipWithIndex) {
+      for ((text, line) <- recipeWrapper.page.linesIterator.zipWithIndex) {
         minecraft.font.draw(stack, text, 4, 4 + line * (minecraft.font.lineHeight + 1), 0x333333)
       }
     }
 
     @Deprecated
-    override def getTitle = "OpenComputers API"
+    override def getTitle = new TextComponent("OpenComputers API")
 
     override def getUid = new ResourceLocation(OpenComputers.ID, "part_api")
   }

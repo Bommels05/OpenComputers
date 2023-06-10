@@ -1,5 +1,5 @@
 package li.cil.oc.integration.appeng;
-
+/*
 import appeng.api.implementations.items.IStorageCell;
 import appeng.api.storage.cells.ICellInventory;
 import appeng.api.storage.cells.ICellInventoryHandler;
@@ -40,3 +40,4 @@ public final class ConverterCellInventory implements Converter {
         }
     }
 }
+ */

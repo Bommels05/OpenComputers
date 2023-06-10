@@ -1,5 +1,5 @@
 package li.cil.oc.integration.appeng
-
+/*
 import java.util.Optional
 import javax.annotation.Nonnull
 
@@ -18,7 +18,7 @@ import net.minecraftforge.forgespi.language.MavenVersionAdapter
 import org.apache.maven.artifact.versioning.VersionRange
 
 @AEAddon
-class AEUtil extends IAEAddon {
+class AEUtil extends AEAddon {
   override def onAPIAvailable(aeApi: IAppEngApi) = AEUtil.onAPIAvailable(aeApi)
 }
 
@@ -81,3 +81,5 @@ object AEUtil {
 
   def getGridEnergy(@Nonnull grid: IGrid): IEnergyGrid = grid.getCache( classOf[IEnergyGrid] )
 }
+ */
+

@@ -1,10 +1,10 @@
 package li.cil.oc.common.item.traits
 
 import li.cil.oc.{Settings, api}
-import li.cil.oc.integration.Mods
 import li.cil.oc.integration.opencomputers.ModOpenComputers
-import net.minecraft.util.{Direction, ResourceLocation}
-import net.minecraft.item.ItemStack
+import net.minecraft.core.Direction
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.item.ItemStack
 import net.minecraftforge.common.capabilities.{Capability, ICapabilityProvider}
 import net.minecraftforge.energy.{CapabilityEnergy, IEnergyStorage}
 import net.minecraftforge.common.util.LazyOptional

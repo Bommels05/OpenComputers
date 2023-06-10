@@ -3,7 +3,6 @@ package li.cil.oc.common
 import java.io
 import java.util.Random
 import java.util.concurrent.Callable
-
 import li.cil.oc.Constants
 import li.cil.oc.OpenComputers
 import li.cil.oc.Settings
@@ -11,15 +10,13 @@ import li.cil.oc.api
 import li.cil.oc.api.fs.FileSystem
 import li.cil.oc.common.init.Items
 import li.cil.oc.util.Color
-import net.minecraft.item.DyeColor
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.CompoundNBT
-import net.minecraft.util.ResourceLocation
-import net.minecraft.util.text.StringTextComponent
-import net.minecraft.world.World
-import net.minecraft.world.server.ServerWorld
-import net.minecraft.world.storage.FolderName
-import net.minecraftforge.common.util.Constants.NBT
+import net.minecraft.nbt.{CompoundTag, Tag}
+import net.minecraft.network.chat.TextComponent
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.item.{DyeColor, ItemStack}
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.storage.LevelResource
 import net.minecraftforge.event.world.WorldEvent
 import net.minecraftforge.eventbus.api.SubscribeEvent
 
@@ -58,7 +55,7 @@ object Loot {
 
   val disksForClient = mutable.ArrayBuffer.empty[ItemStack]
 
-  def isLootDisk(stack: ItemStack): Boolean = api.Items.get(stack) == api.Items.get(Constants.ItemName.Floppy) && stack.hasTag && stack.getTag.contains(Settings.namespace + "lootFactory", NBT.TAG_STRING)
+  def isLootDisk(stack: ItemStack): Boolean = api.Items.get(stack) == api.Items.get(Constants.ItemName.Floppy) && stack.hasTag && stack.getTag.contains(Settings.namespace + "lootFactory", Tag.TAG_STRING)
 
   def randomDisk(rng: Random) =
     if (disksForSampling.nonEmpty) Some(disksForSampling(rng.nextInt(disksForSampling.length)))
@@ -67,7 +64,7 @@ object Loot {
   def registerLootDisk(name: String, loc: ResourceLocation, color: DyeColor, factory: Callable[FileSystem], doRecipeCycling: Boolean): ItemStack = {
     OpenComputers.log.debug(s"Registering loot disk '$name' from mod ${loc.getNamespace}.")
 
-    val data = new CompoundNBT()
+    val data = new CompoundTag()
     data.putString(Settings.namespace + "fs.label", name)
 
     val stack = Items.get(Constants.ItemName.Floppy).createItemStack(1)
@@ -101,10 +98,10 @@ object Loot {
 
   @SubscribeEvent
   def initForWorld(e: WorldEvent.Load): Unit = e.getWorld match {
-    case world: ServerWorld if world.dimension == World.OVERWORLD => {
+    case world: ServerLevel if world.dimension == Level.OVERWORLD => {
       worldDisks.clear()
       disksForSampling.clear()
-      val path = world.getServer.getWorldPath(new FolderName(Settings.savePath)).toFile
+      val path = world.getServer.getWorldPath(new LevelResource(Settings.savePath)).toFile
       if (path.exists && path.isDirectory) {
         val listFile = new io.File(path, "loot/loot.properties")
         if (listFile.exists && listFile.isFile) {
@@ -156,7 +153,7 @@ object Loot {
       override def call(): FileSystem = api.FileSystem.fromResource(new ResourceLocation(Settings.resourceDomain, "loot/" + path))
     }
     val stack = registerLootDisk(path, new ResourceLocation(Settings.resourceDomain, path), color.getOrElse(DyeColor.LIGHT_GRAY), callable, doRecipeCycling = true)
-    stack.setHoverName(new StringTextComponent(name))
+    stack.setHoverName(new TextComponent(name))
     if (!external) {
       Items.registerStack(stack, path)
     }

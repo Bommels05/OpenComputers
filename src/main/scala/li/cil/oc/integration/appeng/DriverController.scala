@@ -1,25 +1,26 @@
 package li.cil.oc.integration.appeng
-
+/*
 import appeng.api.networking.IGridHost
 import appeng.api.networking.security.IActionHost
 import appeng.api.util.AEPartLocation
 import li.cil.oc.api.driver.EnvironmentProvider
 import li.cil.oc.api.driver.NamedBlock
 import li.cil.oc.api.network.ManagedEnvironment
-import li.cil.oc.api.prefab.DriverSidedTileEntity
+import li.cil.oc.api.prefab.DriverSidedBlockEntity
 import li.cil.oc.integration.ManagedTileEntityEnvironment
 import net.minecraft.item.ItemStack
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.Direction
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.world.level.block.entity.BlockEntity
 
 import scala.language.existentials
 
-object DriverController extends DriverSidedTileEntity {
-  private type TileController = TileEntity with IActionHost with IGridHost
+object DriverController extends DriverSidedBlockEntity {
+  private type TileController = BlockEntity with IActionHost with IGridHost
 
-  def getTileEntityClass = AEUtil.controllerClass
+  def getBlockEntityClass = AEUtil.controllerClass
 
   def createEnvironment(world: World, pos: BlockPos, side: Direction): ManagedEnvironment =
     new Environment(world.getBlockEntity(pos).asInstanceOf[TileController])
@@ -40,3 +41,4 @@ object DriverController extends DriverSidedTileEntity {
   }
 
 }
+ */

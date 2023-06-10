@@ -1,7 +1,6 @@
 package li.cil.oc.server.component
 
 import java.util
-
 import li.cil.oc.Constants
 import li.cil.oc.api.driver.DeviceInfo.DeviceAttribute
 import li.cil.oc.api.driver.DeviceInfo.DeviceClass
@@ -16,13 +15,12 @@ import li.cil.oc.api.network.Visibility
 import li.cil.oc.api.prefab.AbstractManagedEnvironment
 import li.cil.oc.util.BlockPosition
 import li.cil.oc.util.ExtendedArguments._
-import net.minecraft.block.Blocks
-import net.minecraft.block.PistonBlock
-import net.minecraft.util.SoundEvents
-import net.minecraft.util.{Direction, SoundCategory}
-import net.minecraft.util.math.BlockPos
 import li.cil.oc.server.{PacketSender => ServerPacketSender}
-import net.minecraft.block.material.PushReaction
+import net.minecraft.core.{BlockPos, Direction}
+import net.minecraft.sounds.{SoundEvents, SoundSource}
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.piston.PistonBaseBlock
+import net.minecraft.world.level.material.PushReaction
 
 import scala.collection.convert.ImplicitConversionsToJava._
 
@@ -73,7 +71,7 @@ abstract class UpgradePiston(val host: EnvironmentHost) extends AbstractManagedE
   protected def doPistonAction(context: Context, side: Direction, extending: Boolean): Array[AnyRef] = {
     val sound = if (extending) SoundEvents.PISTON_EXTEND.getRegistryName else SoundEvents.PISTON_CONTRACT.getRegistryName
     val hostPos = pushOrigin(side).toBlockPos
-    val piston = (if (isSticky) Blocks.STICKY_PISTON else Blocks.PISTON).asInstanceOf[PistonBlock]
+    val piston = (if (isSticky) Blocks.STICKY_PISTON else Blocks.PISTON).asInstanceOf[PistonBaseBlock]
 
     if (!extending) {
       if (!isSticky) {
@@ -84,7 +82,7 @@ abstract class UpgradePiston(val host: EnvironmentHost) extends AbstractManagedE
       val innerBlockPos = hostPos.relative(side): BlockPos
       val innerBlockState = host.world.getBlockState(innerBlockPos)
       if (innerBlockState != null) {
-        if (!innerBlockState.getBlock.isAir(innerBlockState, host.world, innerBlockPos)) {
+        if (!innerBlockState.isAir) {
           if (innerBlockState.getPistonPushReaction != PushReaction.DESTROY) {
             return result(false, "path is obstructed")
           }
@@ -96,7 +94,7 @@ abstract class UpgradePiston(val host: EnvironmentHost) extends AbstractManagedE
       // send piston extend sound to clients
       host.synchronized(ServerPacketSender.sendSound(
         host.world, hostPos.getX, hostPos.getY, hostPos.getZ,
-        sound, SoundCategory.BLOCKS, range = 15.0))
+        sound, SoundSource.BLOCKS, range = 15.0))
       context.pause(1.0 / 20.0)
       result(true)
     } else {

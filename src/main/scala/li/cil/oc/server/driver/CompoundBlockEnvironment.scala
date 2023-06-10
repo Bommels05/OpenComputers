@@ -1,13 +1,12 @@
 package li.cil.oc.server.driver
 
 import java.nio.charset.Charset
-
 import com.google.common.hash.Hashing
 import li.cil.oc.OpenComputers
 import li.cil.oc.api
 import li.cil.oc.api.network._
 import li.cil.oc.util.ExtendedNBT._
-import net.minecraft.nbt.CompoundNBT
+import net.minecraft.nbt.CompoundTag
 
 class CompoundBlockEnvironment(val name: String, val environments: (String, ManagedEnvironment)*) extends ManagedEnvironment {
   // Block drivers with visibility < network usually won't make much sense,
@@ -54,7 +53,7 @@ class CompoundBlockEnvironment(val name: String, val environments: (String, Mana
 
   private final val TypeHashTag = "typeHash"
 
-  override def loadData(nbt: CompoundNBT) {
+  override def loadData(nbt: CompoundTag) {
     // Ignore existing data if the underlying type is different.
     if (nbt.contains(TypeHashTag) && nbt.getLong(TypeHashTag) != typeHash) return
     node.loadData(nbt)
@@ -69,7 +68,7 @@ class CompoundBlockEnvironment(val name: String, val environments: (String, Mana
     }
   }
 
-  override def saveData(nbt: CompoundNBT) {
+  override def saveData(nbt: CompoundTag) {
     nbt.putLong(TypeHashTag, typeHash)
     node.saveData(nbt)
     for ((driver, environment) <- environments) {

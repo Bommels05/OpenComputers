@@ -1,7 +1,7 @@
 package li.cil.oc.client.gui
 
-import com.mojang.blaze3d.matrix.MatrixStack
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.{DefaultVertexFormat, PoseStack, Tesselator, VertexFormat}
 import li.cil.oc.Localization
 import li.cil.oc.Settings
 import li.cil.oc.api
@@ -14,21 +14,20 @@ import li.cil.oc.client.renderer.gui.BufferRenderer
 import li.cil.oc.client.{PacketSender => ClientPacketSender}
 import li.cil.oc.common.container
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.INestedGuiEventHandler
-import net.minecraft.client.gui.widget.button.Button
-import net.minecraft.client.renderer.Tessellator
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.util.text.ITextComponent
+import net.minecraft.client.gui.components.Button
+import net.minecraft.client.gui.components.events.ContainerEventHandler
+import net.minecraft.client.renderer.GameRenderer
+import net.minecraft.network.chat.Component
+import net.minecraft.world.entity.player.Inventory
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL11
 
 import scala.collection.JavaConverters.asJavaCollection
 import scala.collection.convert.ImplicitConversionsToJava._
 
-class Robot(state: container.Robot, playerInventory: PlayerInventory, name: ITextComponent)
+class Robot(state: container.Robot, playerInventory: Inventory, name: Component)
   extends DynamicGuiContainer(state, playerInventory, name)
-  with traits.InputBuffer with INestedGuiEventHandler {
+  with traits.InputBuffer with ContainerEventHandler {
 
   override protected val buffer: TextBuffer = inventoryContainer.info.screenBuffer
     .flatMap(ComponentTracker.get(Minecraft.getInstance.level, _))
@@ -85,7 +84,7 @@ class Robot(state: container.Robot, playerInventory: PlayerInventory, name: ITex
   private val selectionsStates = 17
   private val selectionStepV = 1 / selectionsStates.toFloat
 
-  override def render(stack: MatrixStack, mouseX: Int, mouseY: Int, dt: Float) {
+  override def render(stack: PoseStack, mouseX: Int, mouseY: Int, dt: Float) {
     powerButton.toggled = inventoryContainer.isRunning
     scrollButton.active = canScroll
     scrollButton.hoverOverride = isScrolling
@@ -97,22 +96,23 @@ class Robot(state: container.Robot, playerInventory: PlayerInventory, name: ITex
 
   override protected def init() {
     super.init()
-    powerButton = new ImageButton(leftPos + 5, topPos + 153 - deltaY, 18, 18, new Button.IPressable {
+    powerButton = new ImageButton(leftPos + 5, topPos + 153 - deltaY, 18, 18, new Button.OnPress {
       override def onPress(b: Button) = ClientPacketSender.sendRobotPower(inventoryContainer, !inventoryContainer.isRunning)
     }, Textures.GUI.ButtonPower, canToggle = true)
-    scrollButton = new ImageButton(leftPos + scrollX + 1, topPos + scrollY + 1, 6, 13, new Button.IPressable {
+    scrollButton = new ImageButton(leftPos + scrollX + 1, topPos + scrollY + 1, 6, 13, new Button.OnPress {
       override def onPress(b: Button) = ()
     }, Textures.GUI.ButtonScroll)
-    addButton(powerButton)
-    addButton(scrollButton)
+    addWidget(powerButton)
+    addWidget(scrollButton)
   }
 
-  override def drawBuffer(stack: MatrixStack) {
+  override def drawBuffer(stack: PoseStack) {
     if (buffer != null) {
       stack.translate(bufferX, bufferY, 0)
       stack.pushPose()
       stack.translate(-3, -3, 0)
-      RenderSystem.color4f(1, 1, 1, 1)
+      RenderSystem.setShader(() => GameRenderer.getPositionTexShader)
+      RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F)
       BufferRenderer.drawBackground(stack, bufferRenderWidth.toInt, bufferRenderHeight.toInt, forRobot = true)
       stack.popPose()
       val scaleX = bufferRenderWidth / buffer.renderWidth
@@ -130,7 +130,7 @@ class Robot(state: container.Robot, playerInventory: PlayerInventory, name: ITex
     }
   }
 
-  override protected def renderLabels(stack: MatrixStack, mouseX: Int, mouseY: Int) {
+  override protected def renderLabels(stack: PoseStack, mouseX: Int, mouseY: Int) {
     drawSecondaryForegroundLayer(stack, mouseX, mouseY)
 
     for (slot <- 0 until menu.slots.size()) {
@@ -138,7 +138,7 @@ class Robot(state: container.Robot, playerInventory: PlayerInventory, name: ITex
     }
   }
 
-  override protected def drawSecondaryForegroundLayer(stack: MatrixStack, mouseX: Int, mouseY: Int) {
+  override protected def drawSecondaryForegroundLayer(stack: PoseStack, mouseX: Int, mouseY: Int) {
     drawBufferLayer(stack)
     if (isPointInRegion(power.x, power.y, power.width, power.height, mouseX - leftPos, mouseY - topPos)) {
       val tooltip = new java.util.ArrayList[String]
@@ -150,13 +150,14 @@ class Robot(state: container.Robot, playerInventory: PlayerInventory, name: ITex
     }
     if (powerButton.isMouseOver(mouseX, mouseY)) {
       val tooltip = new java.util.ArrayList[String]
-      tooltip.addAll(asJavaCollection(if (inventoryContainer.isRunning) Localization.Computer.TurnOff.lines.toIterable else Localization.Computer.TurnOn.lines.toIterable))
+      tooltip.addAll(asJavaCollection(if (inventoryContainer.isRunning) Localization.Computer.TurnOff.linesIterator.toIterable else Localization.Computer.TurnOn.linesIterator.toIterable))
       copiedDrawHoveringText(stack, tooltip, mouseX - leftPos, mouseY - topPos, font)
     }
   }
 
-  override protected def renderBg(stack: MatrixStack, dt: Float, mouseX: Int, mouseY: Int) {
-    RenderSystem.color4f(1, 1, 1, 1)
+  override protected def renderBg(stack: PoseStack, dt: Float, mouseX: Int, mouseY: Int) {
+    RenderSystem.setShader(() => GameRenderer.getPositionTexShader)
+    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F)
     if (buffer != null) Textures.bind(Textures.GUI.Robot)
     else Textures.bind(Textures.GUI.RobotNoScreen)
     blit(stack, leftPos, topPos, 0, 0, imageWidth, imageHeight)
@@ -170,7 +171,7 @@ class Robot(state: container.Robot, playerInventory: PlayerInventory, name: ITex
   }
 
   // No custom slots, we just extend DynamicGuiContainer for the highlighting.
-  override protected def drawSlotBackground(stack: MatrixStack, x: Int, y: Int) {}
+  override protected def drawSlotBackground(stack: PoseStack, x: Int, y: Int) {}
 
   override def mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean = {
     val mx = mouseX.asInstanceOf[Int]
@@ -246,7 +247,7 @@ class Robot(state: container.Robot, playerInventory: PlayerInventory, name: ITex
     math.min(scaleX, scaleY)
   }
 
-  private def drawSelection(stack: MatrixStack) {
+  private def drawSelection(stack: PoseStack) {
     val slot = inventoryContainer.selectedSlot - inventoryOffset * 4
     if (slot >= 0 && slot < 16) {
       Textures.bind(Textures.GUI.RobotSelection)
@@ -255,9 +256,9 @@ class Robot(state: container.Robot, playerInventory: PlayerInventory, name: ITex
       val x = leftPos + inventoryX - 1 + (slot % 4) * (selectionSize - 2)
       val y = topPos + inventoryY - 1 + (slot / 4) * (selectionSize - 2)
 
-      val t = Tessellator.getInstance
+      val t = Tesselator.getInstance
       val r = t.getBuilder
-      r.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX)
+      r.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX)
       r.vertex(stack.last.pose, x, y, getBlitOffset).uv(0, offsetV).endVertex()
       r.vertex(stack.last.pose, x, y + selectionSize, getBlitOffset).uv(0, offsetV + selectionStepV).endVertex()
       r.vertex(stack.last.pose, x + selectionSize, y + selectionSize, getBlitOffset).uv(1, offsetV + selectionStepV).endVertex()

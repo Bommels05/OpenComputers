@@ -1,5 +1,5 @@
 package li.cil.oc.integration.appeng
-
+/*
 import java.util.Optional
 
 import appeng.api.networking.security.{IActionHost, IActionSource}
@@ -12,3 +12,4 @@ class MachineSource(val via: IActionHost) extends IActionSource {
 
   def context[T](key: Class[T]): Optional[T] = Optional.empty[T]
 }
+ */

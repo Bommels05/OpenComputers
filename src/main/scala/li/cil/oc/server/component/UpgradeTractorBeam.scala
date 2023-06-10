@@ -1,7 +1,6 @@
 package li.cil.oc.server.component
 
 import java.util
-
 import li.cil.oc.Constants
 import li.cil.oc.api.driver.DeviceInfo.DeviceAttribute
 import li.cil.oc.api.driver.DeviceInfo.DeviceClass
@@ -18,9 +17,10 @@ import li.cil.oc.api.prefab
 import li.cil.oc.api.prefab.AbstractManagedEnvironment
 import li.cil.oc.util.BlockPosition
 import li.cil.oc.util.InventoryUtils
-import net.minecraft.entity.item.ItemEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.entity.player
+import net.minecraft.world.entity
 
 import scala.collection.convert.ImplicitConversionsToJava._
 import scala.collection.convert.ImplicitConversionsToScala._
@@ -68,7 +68,7 @@ object UpgradeTractorBeam {
   }
   }
 
-  class Player(val owner: EnvironmentHost, val player: () => PlayerEntity) extends Common {
+  class Player(val owner: EnvironmentHost, val player: () => entity.player.Player) extends Common {
     override protected def position = BlockPosition(owner)
 
     override protected def collectItem(item: ItemEntity) = item.playerTouch(player())

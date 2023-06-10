@@ -2,7 +2,6 @@ package li.cil.oc.server.machine.luaj
 
 import java.io.FileNotFoundException
 import java.io.IOException
-
 import com.google.common.base.Strings
 import li.cil.oc.OpenComputers
 import li.cil.oc.Settings
@@ -16,8 +15,8 @@ import li.cil.oc.util.ScalaClosure
 import li.cil.oc.util.ScalaClosure._
 import li.cil.repack.org.luaj.vm2._
 import li.cil.repack.org.luaj.vm2.lib.jse.JsePlatform
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.CompoundNBT
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.world.item.ItemStack
 
 import scala.collection.convert.ImplicitConversionsToScala._
 
@@ -250,12 +249,12 @@ class LuaJLuaArchitecture(val machine: api.machine.Machine) extends Architecture
 
   // ----------------------------------------------------------------------- //
 
-  override def loadData(nbt: CompoundNBT) {
+  override def loadData(nbt: CompoundTag) {
     if (machine.isRunning) {
       machine.stop()
       machine.start()
     }
   }
 
-  override def saveData(nbt: CompoundNBT) {}
+  override def saveData(nbt: CompoundTag) {}
 }

@@ -1,5 +1,5 @@
 package li.cil.oc.integration.appeng
-
+/*
 import appeng.api.implementations.tiles.ISegmentedInventory
 import appeng.api.parts.IPartHost
 import li.cil.oc.api.internal.Database
@@ -64,3 +64,4 @@ trait PartEnvironmentBase extends ManagedEnvironment {
     }
   }
 }
+ */

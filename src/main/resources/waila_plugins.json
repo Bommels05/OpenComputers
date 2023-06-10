@@ -1,0 +1,6 @@
+{
+  "opencomputers:plugin": {
+    "initializer": "li.cil.oc.integration.waila.BlockDataProvider",
+    "side": "*"
+  }
+}

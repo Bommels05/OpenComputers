@@ -1,5 +1,5 @@
 package li.cil.oc.integration.appeng
-
+/*
 import appeng.api.implementations.items.IAEWrench
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
@@ -16,3 +16,4 @@ object EventHandlerAE2 {
 
   def isWrench(stack: ItemStack): Boolean = stack.getItem.isInstanceOf[IAEWrench]
 }
+ */

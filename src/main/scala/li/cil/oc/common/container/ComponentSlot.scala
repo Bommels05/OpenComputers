@@ -3,17 +3,18 @@ package li.cil.oc.common.container
 import li.cil.oc.api.Driver
 import li.cil.oc.api.network.EnvironmentHost
 import li.cil.oc.common
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.inventory.IInventory
-import net.minecraft.inventory.container.Slot
-import net.minecraft.item.ItemStack
-import net.minecraft.util.ResourceLocation
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.Container
+import net.minecraft.world.inventory.Slot
+import net.minecraft.world.item.ItemStack
 import net.minecraftforge.api.distmarker.Dist
 import net.minecraftforge.api.distmarker.OnlyIn
+import net.minecraft.world.entity.player
+import net.minecraft.world.entity
 
 import scala.collection.convert.ImplicitConversionsToScala._
 
-abstract class ComponentSlot(inventory: IInventory, index: Int, x: Int, y: Int, host: Class[_ <: EnvironmentHost]) extends Slot(inventory, index, x, y) {
+abstract class ComponentSlot(inventory: Container, index: Int, x: Int, y: Int, host: Class[_ <: EnvironmentHost]) extends Slot(inventory, index, x, y) {
   def agentContainer: Player
 
   def slot: String
@@ -52,7 +53,7 @@ abstract class ComponentSlot(inventory: IInventory, index: Int, x: Int, y: Int, 
     }
   }
 
-  override def onTake(player: PlayerEntity, stack: ItemStack) = {
+  override def onTake(player: entity.player.Player, stack: ItemStack) = {
     for (slot <- agentContainer.slots) slot match {
       case dynamic: ComponentSlot => dynamic.clearIfInvalid(player)
       case _ =>
@@ -63,7 +64,7 @@ abstract class ComponentSlot(inventory: IInventory, index: Int, x: Int, y: Int, 
   override def set(stack: ItemStack): Unit = {
     super.set(stack)
     inventory match {
-      case playerAware: common.tileentity.traits.PlayerInputAware =>
+      case playerAware: common.blockentity.traits.PlayerInputAware =>
         playerAware.onSetInventorySlotContents(agentContainer.playerInventory.player, getSlotIndex, stack)
       case _ =>
     }
@@ -78,5 +79,5 @@ abstract class ComponentSlot(inventory: IInventory, index: Int, x: Int, y: Int, 
     changeListener.foreach(_(this))
   }
 
-  protected def clearIfInvalid(player: PlayerEntity) {}
+  protected def clearIfInvalid(player: entity.player.Player) {}
 }

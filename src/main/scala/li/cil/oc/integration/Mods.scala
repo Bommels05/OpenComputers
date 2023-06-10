@@ -29,7 +29,6 @@ object Mods {
   val Minecraft = new SimpleMod(IDs.Minecraft)
   val OpenComputers = new SimpleMod(IDs.OpenComputers)
   val TIS3D = new SimpleMod(IDs.TIS3D, version = "[0.9,)")
-  val ProjectRedTransmission = new SimpleMod((IDs.ProjectRedTransmission))
   val DraconicEvolution = new SimpleMod(IDs.DraconicEvolution)
   val EnderStorage = new SimpleMod(IDs.EnderStorage)
 
@@ -41,7 +40,6 @@ object Mods {
     integration.tis3d.ModTIS3D,
     integration.mekanism.ModMekanism,
     integration.minecraft.ModMinecraft,
-    integration.projectred.ModProjectRed,
     integration.computercraft.ModComputerCraft,
     integration.enderstorage.ModEnderStorage,
 
@@ -106,7 +104,6 @@ object Mods {
     final val OpenComputers = "opencomputers"
     final val TIS3D = "tis3d"
     final val Waila = "waila"
-    final val ProjectRedTransmission = "projectred-transmission"
     final val DraconicEvolution = "draconicevolution"
     final val EnderStorage = "enderstorage"
   }

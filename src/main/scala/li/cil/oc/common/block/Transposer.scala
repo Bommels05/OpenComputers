@@ -1,13 +1,10 @@
 package li.cil.oc.common.block
 
-import li.cil.oc.common.tileentity
-import net.minecraft.block.AbstractBlock.Properties
-import net.minecraft.block.BlockState
-import net.minecraft.util.Direction
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.IBlockReader
-import net.minecraft.world.World
+import li.cil.oc.common.blockentity
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties
+import net.minecraft.world.level.block.state.BlockState
 
-class Transposer(props: Properties) extends SimpleBlock(props) {
-  override def newBlockEntity(world: IBlockReader) = new tileentity.Transposer(tileentity.TileEntityTypes.TRANSPOSER)
+class Transposer(props: Properties) extends SimpleBlock(props, blockentity.BlockEntityTypes.TRANSPOSER) {
+  override def newBlockEntity(pos: BlockPos, state: BlockState) = new blockentity.Transposer(blockentity.BlockEntityTypes.TRANSPOSER, pos, state)
 }

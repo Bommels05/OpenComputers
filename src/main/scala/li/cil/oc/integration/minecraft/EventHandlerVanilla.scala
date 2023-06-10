@@ -4,12 +4,10 @@ import li.cil.oc.Settings
 import li.cil.oc.api.event.GeolyzerEvent
 import li.cil.oc.util.BlockPosition
 import li.cil.oc.util.ExtendedWorld._
-import net.minecraft.block.Block
-import net.minecraft.block.CropsBlock
-import net.minecraft.block.StemBlock
-import net.minecraft.state.IntegerProperty
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.{Block, Blocks, CropBlock, StemBlock}
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.state.properties.IntegerProperty
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fluids.IFluidBlock
 
@@ -33,11 +31,11 @@ object EventHandlerVanilla {
     val w = e.maxX - e.minX + 1
     val d = e.maxZ - e.minZ + 1
     for (ry <- e.minY to e.maxY; rz <- e.minZ to e.maxZ; rx <- e.minX to e.maxX) {
-      val pos = blockPos.toBlockPos.offset(rx, ry, rz)
+      val pos: BlockPos = blockPos.toBlockPos.offset(rx, ry, rz)
       val index = (rx - e.minX) + ((rz - e.minZ) + (ry - e.minY) * d) * w
       if (world.isLoaded(pos) && !world.isEmptyBlock(pos)) {
         val blockState = world.getBlockState(pos)
-        if (!blockState.getBlock.isAir(blockState, world, pos) && (includeReplaceable || blockState.getBlock.isInstanceOf[IFluidBlock] || !blockState.getMaterial.isReplaceable)) {
+        if (!blockState.isAir() && (includeReplaceable || blockState.getBlock.isInstanceOf[IFluidBlock] || !blockState.getMaterial.isReplaceable)) {
           val distance = math.sqrt(rx * rx + ry * ry + rz * rz).toFloat
           e.data(index) = e.data(index) * distance * Settings.get.geolyzerNoise + blockState.getDestroySpeed(world, pos)
         }
@@ -65,8 +63,8 @@ object EventHandlerVanilla {
 
     e.data += "name" -> block.getRegistryName
     e.data += "hardness" -> Float.box(blockState.getDestroySpeed(world, e.pos))
-    e.data += "harvestLevel" -> Int.box(block.getHarvestLevel(blockState))
-    e.data += "harvestTool" -> Option(block.getHarvestTool(blockState)).map(_.getName).orNull
+    //e.data += "harvestLevel" -> Int.box(block.getHarvestLevel(blockState))
+    //e.data += "harvestTool" -> Option(block.getHarvestTool(blockState)).map(_.getName).orNull
     e.data += "color" -> Int.box(blockState.getMapColor(world, e.pos).col)
 
     // backward compatibility
@@ -85,7 +83,7 @@ object EventHandlerVanilla {
     }
 
     {
-      if (block.isInstanceOf[CropsBlock] || block.isInstanceOf[StemBlock] || block == Blocks.COCOA || block == Blocks.NETHER_WART || block == Blocks.CHORUS_FLOWER) {
+      if (block.isInstanceOf[CropBlock] || block.isInstanceOf[StemBlock] || block == Blocks.COCOA || block == Blocks.NETHER_WART || block == Blocks.CHORUS_FLOWER) {
         getGrowth(blockState)
       } else if (block == Blocks.MELON || block == Blocks.PUMPKIN || block == Blocks.CACTUS || block == Blocks.SUGAR_CANE || block == Blocks.CHORUS_PLANT) {
         Some(1f)

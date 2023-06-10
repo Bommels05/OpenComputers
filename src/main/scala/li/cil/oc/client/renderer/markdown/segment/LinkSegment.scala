@@ -1,14 +1,13 @@
 package li.cil.oc.client.renderer.markdown.segment
 
 import java.net.URI
-
 import li.cil.oc.Localization
 import li.cil.oc.OpenComputers
 import li.cil.oc.api
 import li.cil.oc.client.Manual
 import li.cil.oc.client.renderer.markdown.MarkupFormat
+import net.minecraft.Util
 import net.minecraft.client.Minecraft
-import net.minecraft.util.Util
 
 private[markdown] class LinkSegment(parent: Segment, text: String, val url: String) extends TextSegment(parent, text) with InteractiveSegment {
   private final val normalColor = 0x66FF66

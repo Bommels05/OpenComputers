@@ -1,13 +1,11 @@
 package li.cil.oc.integration.appeng
-
+/*
 import java.util
-
 import appeng.api.config.Actionable
-import appeng.api.networking.{IGridHost, IGridNode}
-import appeng.api.networking.crafting.{ICraftingJob, ICraftingLink, ICraftingRequester}
+import appeng.api.networking.{IGrid, IGridNode}
+import appeng.api.networking.crafting.{ICraftingLink, ICraftingRequester}
 import appeng.api.networking.security.IActionHost
-import appeng.api.storage.data.IAEItemStack
-import appeng.api.util.{AECableType, AEPartLocation}
+import appeng.api.util.AECableType
 import com.google.common.collect.ImmutableSet
 import li.cil.oc.OpenComputers
 import li.cil.oc.api.machine.Arguments
@@ -21,16 +19,7 @@ import li.cil.oc.util.{DatabaseAccess, NbtDataStream}
 import li.cil.oc.util.ExtendedArguments._
 import li.cil.oc.util.ExtendedNBT._
 import li.cil.oc.util.ResultWrapper._
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.CompoundNBT
-import net.minecraft.tileentity.TileEntity
-import net.minecraft.util.RegistryKey
-import net.minecraft.util.ResourceLocation
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.registry.{Registry => VanillaRegistry}
-import net.minecraft.world.World
-import net.minecraftforge.common.util.Constants.NBT
-import net.minecraftforge.fml.server.ServerLifecycleHooks
+import net.minecraft.world.level.block.entity.BlockEntity
 
 import scala.collection.convert.ImplicitConversionsToJava._
 import scala.collection.convert.ImplicitConversionsToScala._
@@ -40,7 +29,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.existentials
 
 // Note to self: this class is used by ExtraCells (and potentially others), do not rename / drastically change it.
-trait NetworkControl[AETile >: Null <: TileEntity with IActionHost with IGridHost] {
+trait NetworkControl[AETile >: Null <: BlockEntity with IActionHost with IGrid] {
   def tile: AETile
   def pos: AEPartLocation
 
@@ -555,3 +544,4 @@ object NetworkControl {
     }
   }
 }
+ */

@@ -2,8 +2,7 @@ package li.cil.oc.util
 
 import java.util.Objects
 
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.{Item, ItemStack}
 
 import scala.language.implicitConversions
 

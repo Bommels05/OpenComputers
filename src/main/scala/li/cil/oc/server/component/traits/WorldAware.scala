@@ -5,15 +5,14 @@ import li.cil.oc.Settings
 import li.cil.oc.util.{BlockInventorySource, BlockPosition, EntityInventorySource, InventorySource}
 import li.cil.oc.util.ExtendedBlock._
 import li.cil.oc.util.ExtendedWorld._
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.item.minecart.MinecartEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.{ActionResult, Direction, Hand}
-import net.minecraft.util.math.AxisAlignedBB
-import net.minecraft.util.math.BlockRayTraceResult
-import net.minecraft.util.math.shapes.ISelectionContext
-import net.minecraft.world.server.ServerWorld
+import net.minecraft.core.Direction
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.{Entity, LivingEntity}
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.vehicle.Minecart
+import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.world.phys.{AABB, BlockHitResult}
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.common.util.FakePlayerFactory
 import net.minecraftforge.event.entity.player.PlayerInteractEvent
@@ -30,16 +29,16 @@ trait WorldAware {
 
   def world = position.world.get
 
-  def fakePlayer: PlayerEntity = {
-    val player = FakePlayerFactory.get(world.asInstanceOf[ServerWorld], Settings.get.fakePlayerProfile)
+  def fakePlayer: Player = {
+    val player = FakePlayerFactory.get(world.asInstanceOf[ServerLevel], Settings.get.fakePlayerProfile)
     player.setPos(position.x + 0.5, position.y + 0.5, position.z + 0.5)
     player
   }
 
   private def mayInteract(blockPos: BlockPosition, face: Direction): Boolean = {
     try {
-      val trace = new BlockRayTraceResult(fakePlayer.position, face, blockPos.toBlockPos, false)
-      val event = new PlayerInteractEvent.RightClickBlock(fakePlayer, Hand.MAIN_HAND, blockPos.toBlockPos, trace)
+      val trace = new BlockHitResult(fakePlayer.position, face, blockPos.toBlockPos, false)
+      val event = new PlayerInteractEvent.RightClickBlock(fakePlayer, InteractionHand.MAIN_HAND, blockPos.toBlockPos, trace)
       MinecraftForge.EVENT_BUS.post(event)
       !event.isCanceled && event.getUseBlock != Result.DENY
     } catch {
@@ -51,7 +50,7 @@ trait WorldAware {
 
   private def mayInteract(entity: Entity): Boolean = {
     try {
-      val event = new PlayerInteractEvent.EntityInteract(fakePlayer, Hand.MAIN_HAND, entity)
+      val event = new PlayerInteractEvent.EntityInteract(fakePlayer, InteractionHand.MAIN_HAND, entity)
       MinecraftForge.EVENT_BUS.post(event)
       !event.isCanceled
     } catch {
@@ -70,7 +69,7 @@ trait WorldAware {
     case _ => true
   })
 
-  def entitiesInBounds[Type <: Entity](clazz: Class[Type], bounds: AxisAlignedBB) = {
+  def entitiesInBounds[Type <: Entity](clazz: Class[Type], bounds: AABB) = {
     world.getEntitiesOfClass(clazz, bounds)
   }
 
@@ -90,13 +89,13 @@ trait WorldAware {
 
   def blockContent(side: Direction) = {
     closestEntity[Entity](classOf[Entity], side) match {
-      case Some(_@(_: LivingEntity | _: MinecartEntity)) =>
+      case Some(_@(_: LivingEntity | _: Minecart)) =>
         (true, "entity")
       case _ =>
         val blockPos = position.offset(side)
         val state = world.getBlockState(blockPos.toBlockPos)
         val block = state.getBlock
-        if (block.isAir(state, world, blockPos.toBlockPos)) {
+        if (block.isAir(blockPos)) {
           (false, "air")
         }
         else if (!block.isInstanceOf[IFluidBlock]) {
@@ -109,7 +108,7 @@ trait WorldAware {
           MinecraftForge.EVENT_BUS.post(event)
           (event.isCanceled, "replaceable")
         }
-        else if (state.getCollisionShape(world, blockPos.toBlockPos, ISelectionContext.empty).isEmpty) {
+        else if (state.getCollisionShape(world, blockPos.toBlockPos, CollisionContext.empty).isEmpty) {
           (true, "passable")
         }
         else {

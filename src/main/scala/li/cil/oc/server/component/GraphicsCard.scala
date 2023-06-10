@@ -11,9 +11,9 @@ import li.cil.oc.api.network._
 import li.cil.oc.api.prefab
 import li.cil.oc.api.prefab.AbstractManagedEnvironment
 import li.cil.oc.util.{ExtendedUnicodeHelper, PackedColor}
-import net.minecraft.nbt.{CompoundNBT, ListNBT}
 import li.cil.oc.common.component
 import li.cil.oc.common.component.GpuTextBuffer
+import net.minecraft.nbt.{CompoundTag, ListTag}
 
 import scala.collection.convert.ImplicitConversionsToJava._
 import scala.util.matching.Regex
@@ -562,7 +562,7 @@ class GraphicsCard(val tier: Int) extends AbstractManagedEnvironment with Device
             s.fill(0, 0, w, h, 0x20)
             try {
               val wrapRegEx = s"(.{1,${math.max(1, w - 2)}})\\s".r
-              val lines = wrapRegEx.replaceAllIn(Localization.localizeImmediately(machine.lastError).replace("\t", "  ") + "\n", m => Regex.quoteReplacement(m.group(1) + "\n")).lines.toArray
+              val lines = wrapRegEx.replaceAllIn(Localization.localizeImmediately(machine.lastError).replace("\t", "  ") + "\n", m => Regex.quoteReplacement(m.group(1) + "\n")).linesIterator.toArray
               val firstRow = ((h - lines.length) / 2) max 2
 
               val message = "Unrecoverable Error"
@@ -614,9 +614,9 @@ class GraphicsCard(val tier: Int) extends AbstractManagedEnvironment with Device
   private final val NBT_PAGES: String = "pages"
   private final val NBT_PAGE_IDX: String = "page_idx"
   private final val NBT_PAGE_DATA: String = "page_data"
-  private val COMPOUND_ID = (new CompoundNBT).getId
+  private val COMPOUND_ID = (new CompoundTag).getId
 
-  override def loadData(nbt: CompoundNBT) {
+  override def loadData(nbt: CompoundTag) {
     super.loadData(nbt)
 
     if (nbt.contains(SCREEN_KEY)) {
@@ -644,7 +644,7 @@ class GraphicsCard(val tier: Int) extends AbstractManagedEnvironment with Device
     }
   }
 
-  override def saveData(nbt: CompoundNBT) {
+  override def saveData(nbt: CompoundTag) {
     super.saveData(nbt)
 
     if (screenAddress.isDefined) {
@@ -653,16 +653,16 @@ class GraphicsCard(val tier: Int) extends AbstractManagedEnvironment with Device
 
     nbt.putInt(BUFFER_INDEX_KEY, bufferIndex)
 
-    val videoRamNbt = new CompoundNBT
-    val nbtPages = new ListNBT
+    val videoRamNbt = new CompoundTag
+    val nbtPages = new ListTag
 
     val indexes = bufferIndexes()
     for (idx: Int <- indexes) {
       getBuffer(idx) match {
         case Some(page) => {
-          val nbtPage = new CompoundNBT
+          val nbtPage = new CompoundTag
           nbtPage.putInt(NBT_PAGE_IDX, idx)
-          val data = new CompoundNBT
+          val data = new CompoundTag
           page.data.saveData(data)
           nbtPage.put(NBT_PAGE_DATA, data)
           nbtPages.add(nbtPage)

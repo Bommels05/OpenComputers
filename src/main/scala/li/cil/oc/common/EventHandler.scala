@@ -1,9 +1,6 @@
 package li.cil.oc.common
 
 import java.util.Calendar
-
-import appeng.api.networking.IGridBlock
-import appeng.api.util.AEPartLocation
 import li.cil.oc._
 import li.cil.oc.api.Network
 import li.cil.oc.api.detail.ItemInfo
@@ -24,8 +21,8 @@ import li.cil.oc.common.item.data.MicrocontrollerData
 import li.cil.oc.common.item.data.RobotData
 import li.cil.oc.common.item.data.TabletData
 import li.cil.oc.common.item.traits
-import li.cil.oc.common.tileentity.Robot
-import li.cil.oc.common.tileentity.traits.power
+import li.cil.oc.common.blockentity.Robot
+import li.cil.oc.common.blockentity.traits.power
 import li.cil.oc.integration.Mods
 import li.cil.oc.integration.util
 import li.cil.oc.server.component.Keyboard
@@ -36,17 +33,13 @@ import li.cil.oc.server.{PacketSender => ServerPacketSender}
 import li.cil.oc.util.ExtendedWorld._
 import li.cil.oc.util.StackOption._
 import li.cil.oc.util._
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.ServerPlayerEntity
-import net.minecraft.util.SoundEvents
-import net.minecraft.item.ItemStack
-import net.minecraft.tileentity.TileEntity
-import net.minecraft.util.SoundCategory
-import net.minecraft.util.Util
-import net.minecraft.world.chunk.Chunk
-import net.minecraft.world.server.ChunkHolder
-import net.minecraft.world.server.ChunkManager
-import net.minecraft.world.server.ServerWorld
+import net.minecraft.Util
+import net.minecraft.server.level.{ChunkHolder, ChunkMap, ServerLevel, ServerPlayer}
+import net.minecraft.sounds.{SoundEvents, SoundSource}
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraftforge.api.distmarker.Dist
 import net.minecraftforge.api.distmarker.OnlyIn
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent
@@ -62,8 +55,8 @@ import net.minecraftforge.event.world.BlockEvent
 import net.minecraftforge.event.world.ChunkEvent
 import net.minecraftforge.event.world.WorldEvent
 import net.minecraftforge.eventbus.api.SubscribeEvent
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper
-import net.minecraftforge.fml.server.ServerLifecycleHooks
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper
+import net.minecraftforge.server.ServerLifecycleHooks
 
 import scala.collection.convert.ImplicitConversionsToScala._
 import scala.collection.mutable
@@ -94,9 +87,9 @@ object EventHandler {
 
   def unscheduleClose(machine: Machine): Unit = machines -= machine
 
-  def scheduleServer(tileEntity: TileEntity) {
+  def scheduleServer(blockEntity: BlockEntity) {
     if (SideTracker.isServer) pendingServer.synchronized {
-      pendingServer += (() => Network.joinOrCreateNetwork(tileEntity))
+      pendingServer += (() => Network.joinOrCreateNetwork(blockEntity))
     }
   }
 
@@ -119,11 +112,13 @@ object EventHandler {
   }
 
   object AE2 {
+    /*
     def scheduleAE2Add(tileEntity: power.AppliedEnergistics2): Unit = {
       if (SideTracker.isServer) pendingServer.synchronized {
         pendingServer += (() => tileEntity.updateGridNodeState())
       }
     }
+     */
   }
 
   def scheduleWirelessRedstone(rs: server.component.RedstoneWireless) {
@@ -155,10 +150,10 @@ object EventHandler {
   }
 
   @SubscribeEvent
-  def onAttachCapabilities(event: AttachCapabilitiesEvent[TileEntity]): Unit = {
+  def onAttachCapabilities(event: AttachCapabilitiesEvent[BlockEntity]): Unit = {
     event.getObject match {
-      case tileEntity: TileEntity with Environment => {
-        val provider = new CapabilityEnvironment.Provider(tileEntity)
+      case blockEntity: BlockEntity with Environment => {
+        val provider = new CapabilityEnvironment.Provider(blockEntity)
         event.addCapability(CapabilityEnvironment.ProviderEnvironment, provider)
         event.addListener(new Runnable {
           override def run = provider.invalidate
@@ -168,15 +163,15 @@ object EventHandler {
     }
 
     event.getObject match {
-      case tileEntity: TileEntity with Environment with SidedComponent => {
-        val provider = new CapabilitySidedComponent.Provider(tileEntity)
+      case blockEntity: BlockEntity with Environment with SidedComponent => {
+        val provider = new CapabilitySidedComponent.Provider(blockEntity)
         event.addCapability(CapabilitySidedComponent.SidedComponent, provider)
         event.addListener(new Runnable {
           override def run = provider.invalidate
         })
       }
-      case tileEntity: TileEntity with SidedEnvironment => {
-        val provider = new CapabilitySidedEnvironment.Provider(tileEntity)
+      case blockEntity: BlockEntity with SidedEnvironment => {
+        val provider = new CapabilitySidedEnvironment.Provider(blockEntity)
         event.addCapability(CapabilitySidedEnvironment.ProviderSidedEnvironment, provider)
         event.addListener(new Runnable {
           override def run = provider.invalidate
@@ -186,8 +181,8 @@ object EventHandler {
     }
 
     event.getObject match {
-      case tileEntity: TileEntity with Colored => {
-        val provider = new CapabilityColored.Provider(tileEntity)
+      case blockEntity: BlockEntity with Colored => {
+        val provider = new CapabilityColored.Provider(blockEntity)
         event.addCapability(CapabilityColored.ProviderColored, provider)
         event.addListener(new Runnable {
           override def run = provider.invalidate
@@ -253,7 +248,7 @@ object EventHandler {
   def playerLoggedIn(e: PlayerLoggedInEvent) {
     if (SideTracker.isServer) e.getPlayer match {
       case _: FakePlayer => // Nope
-      case player: ServerPlayerEntity =>
+      case player: ServerPlayer =>
         if (!LuaStateFactory.isAvailable && !LuaStateFactory.luajRequested) {
           player.sendMessage(Localization.Chat.WarningLuaFallback, Util.NIL_UUID)
         }
@@ -293,11 +288,11 @@ object EventHandler {
   @SubscribeEvent
   def onBlockBreak(e: BlockEvent.BreakEvent): Unit = {
     e.getWorld.getBlockEntity(e.getPos) match {
-      case c: tileentity.Case =>
+      case c: blockentity.Case =>
         if (c.isCreative && (!e.getPlayer.isCreative || !c.canInteract(e.getPlayer.getName.getString))) {
           e.setCanceled(true)
         }
-      case r: tileentity.RobotProxy =>
+      case r: blockentity.RobotProxy =>
         val robot = r.robot
         if (robot.isCreative && (!e.getPlayer.isCreative || !robot.canInteract(e.getPlayer.getName.getString))) {
           e.setCanceled(true)
@@ -324,11 +319,11 @@ object EventHandler {
   @SubscribeEvent
   def onEntityJoinWorld(e: EntityJoinWorldEvent): Unit = {
     if (Settings.get.giveManualToNewPlayers && !e.getWorld.isClientSide) e.getEntity match {
-      case player: PlayerEntity if !player.isInstanceOf[FakePlayer] =>
+      case player: Player if !player.isInstanceOf[FakePlayer] =>
         val persistedData = PlayerUtils.persistedData(player)
         if (!persistedData.getBoolean(Settings.namespace + "receivedManual")) {
           persistedData.putBoolean(Settings.namespace + "receivedManual", true)
-          player.inventory.add(api.Items.get(Constants.ItemName.Manual).createItemStack(1))
+          player.getInventory.add(api.Items.get(Constants.ItemName.Manual).createItemStack(1))
         }
       case _ =>
     }
@@ -376,13 +371,13 @@ object EventHandler {
     // Presents?
     e.getPlayer match {
       case _: FakePlayer => // No presents for you, automaton. Such discrimination. Much bad conscience.
-      case player: ServerPlayerEntity if player.level != null && !player.level.isClientSide =>
+      case player: ServerPlayer if player.level != null && !player.level.isClientSide =>
         // Presents!? If we didn't recraft, it's an OC item, and the time is right...
         if (Settings.get.presentChance > 0 && !didRecraft && api.Items.get(e.getCrafting) != null &&
           e.getPlayer.getRandom.nextFloat() < Settings.get.presentChance && timeForPresents) {
           // Presents!
           val present = api.Items.get(Constants.ItemName.Present).createItemStack(1)
-          e.getPlayer.level.playSound(e.getPlayer, e.getPlayer.getX, e.getPlayer.getY, e.getPlayer.getZ, SoundEvents.NOTE_BLOCK_PLING, SoundCategory.MASTER, 0.2f, 1f)
+          e.getPlayer.level.playSound(e.getPlayer, e.getPlayer.getX, e.getPlayer.getY, e.getPlayer.getZ, SoundEvents.NOTE_BLOCK_PLING, SoundSource.MASTER, 0.2f, 1f)
           InventoryUtils.addToPlayerInventory(present, e.getPlayer)
         }
       case _ => // Nope.
@@ -436,9 +431,9 @@ object EventHandler {
     else false
   }
 
-  private val getChunks = ObfuscationReflectionHelper.findMethod(classOf[ChunkManager], "func_223491_f")
+  private val getChunks = ObfuscationReflectionHelper.findMethod(classOf[ChunkMap], "func_223491_f")
 
-  private def getChunks(world: ServerWorld): Iterable[ChunkHolder] = try {
+  private def getChunks(world: ServerLevel): Iterable[ChunkHolder] = try {
     getChunks.invoke(world.getChunkSource.chunkMap).asInstanceOf[java.lang.Iterable[ChunkHolder]]
   }
   catch {
@@ -453,16 +448,16 @@ object EventHandler {
   @SubscribeEvent
   def onWorldUnload(e: WorldEvent.Unload): Unit = this.synchronized {
     if (!e.getWorld.isClientSide) {
-      val world = e.getWorld.asInstanceOf[ServerWorld]
-      world.blockEntityList.collect {
-        case te: tileentity.traits.TileEntity => te.dispose()
-      }
+      val world = e.getWorld.asInstanceOf[ServerLevel]
 
       getChunks(world).foreach(holder => {
         val chunk = holder.getTickingChunk
-        if (chunk != null) chunk.getEntitySections.foreach {
-          _.iterator.collect {
-            case host: MachineHost => host.machine.stop()
+        if (chunk != null) {
+          chunk.getBlockEntities.values().collect {
+              case host: MachineHost => host.machine.stop()
+          }
+          chunk.getBlockEntities.values().collect {
+            case be: blockentity.traits.BlockEntity => be.dispose()
           }
         }
       })
@@ -477,8 +472,8 @@ object EventHandler {
   @SubscribeEvent
   def onChunkUnloaded(e: ChunkEvent.Unload): Unit = {
     if (!e.getWorld.isClientSide) e.getChunk match {
-      case chunk: Chunk => {
-        chunk.getEntitySections.foreach(_.collect {
+      case chunk: LevelChunk => {
+        chunk.getBlockEntities.values().collect {
           case host: MachineHost => host.machine match {
             case machine: Machine => scheduleClose(machine)
             case _ => // Dafuq?
@@ -487,7 +482,7 @@ object EventHandler {
             (0 until rack.getContainerSize).
               map(rack.getMountable).
               collect { case server: Server if server.machine != null => server.machine.stop() }
-        })
+        }
       }
       case _ =>
     }
